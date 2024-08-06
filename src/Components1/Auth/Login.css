@@ -1,0 +1,25 @@
+/* Dans Login.css ou index.css */
+body {
+    background-color:#f4f4f4	 !important;
+ 
+  
+    
+    
+
+    margin: 0; /* Assurez-vous qu'il n'y a pas de marge par défaut */
+    height: 50vh; /* Pour s'assurer que le corps occupe toute la hauteur de la fenêtre */
+}
+.beneficiary-link {
+  
+    text-align: center;
+  }
+  
+  .beneficiary-link-text {
+    color: green;
+    text-decoration: none;
+  }
+  
+  .beneficiary-link-text:hover {
+    text-decoration: underline;
+  }
+

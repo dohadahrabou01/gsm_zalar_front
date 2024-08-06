@@ -1,0 +1,27 @@
+/* customStyles.css */
+.custom-form-control {
+    
+    margin-bottom: 16px;
+    min-width: 120px; /* Espacement en bas */
+}
+
+.custom-form-control .MuiOutlinedInput-root {
+    border-color: #4B0082; /* Couleur de la bordure */
+}
+
+.custom-form-control .MuiOutlinedInput-root:hover fieldset {
+    border-color: #4B0082;
+     /* Couleur de la bordure au survol */
+}
+
+.custom-form-control .MuiOutlinedInput-root.Mui-focused fieldset {
+    border-color: #4B0082; /* Couleur de la bordure lorsqu'il est focalisé */
+}
+
+.custom-form-control .MuiInputLabel-root {
+    color: #4B0082; /* Couleur du label */
+}
+
+.custom-form-control .MuiInputLabel-root.Mui-focused {
+    color: #4B0082; /* Couleur du label lorsqu'il est focalisé */
+}
