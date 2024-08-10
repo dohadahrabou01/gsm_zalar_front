@@ -21,6 +21,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [refresh, setRefresh] = useState(false);
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const fetchBeneficiares = async () => {
             if (!numero) {
@@ -30,7 +31,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
 
             setLoading(true);
             try {
-                const response = await axios.get(`http://localhost:8089/api/beneficiares/by-numero?numero=${numero}`);
+                const response = await axios.get(`${apiUrl}/api/beneficiares/by-numero?numero=${numero}`);
                 setBeneficiares(response.data);
                 setError(null);
                 setRefresh(!refresh);
@@ -64,7 +65,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
     const createNumero = async (numero, beneficiareId, affectantEmail, token) => {
         try {
             const response = await axios.post(
-                'http://localhost:8089/afnumero/create',
+                `${apiUrl}/afnumero/create`,
                 new URLSearchParams({
                     numero: numero,
                     beneficiareId: beneficiareId,

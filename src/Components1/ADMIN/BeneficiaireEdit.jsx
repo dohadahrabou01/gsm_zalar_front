@@ -27,7 +27,7 @@ const EditBeneficiaire = ({ row, onClose, multiple }) => {
     const [selectedFillialeLibelle, setSelectedFillialeLibelle] = useState(row.filliale || '');
     const [isMultiple, setIsMultiple] = useState(row.multiple === true || row.multiple === "true"); // Handle both boolean and string "true"
     const token = localStorage.getItem('token'); // Replace with your actual token retrieval mechanism
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         console.log('Beneficiaire information:', row);
         setIsMultiple(row.multiple === true || row.multiple === "true"); // Handle both boolean and string "true"
@@ -40,9 +40,9 @@ const EditBeneficiaire = ({ row, onClose, multiple }) => {
                 let response;
 
                 if (userRole === 'ADMIN' || userRole === 'DSI') {
-                    response = await axios.get('http://localhost:8089/api/filliales/filliales');
+                    response = await axios.get(`${apiUrl}/api/filliales/filliales`);
                 } else if (userRole === 'RSI' || userRole === 'SI') {
-                    response = await axios.get(`http://localhost:8089/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
+                    response = await axios.get(`${apiUrl}/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
                 }
 
                 setFilliales(response?.data || []);
@@ -65,7 +65,7 @@ const EditBeneficiaire = ({ row, onClose, multiple }) => {
         };
 
         try {
-            await axios.put(`http://localhost:8089/api/beneficiares/${row.id}`, userDTO, {
+            await axios.put(`${apiUrl}/api/beneficiares/${row.id}`, userDTO, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

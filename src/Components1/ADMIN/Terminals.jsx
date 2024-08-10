@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -17,18 +17,18 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+
 import TerminalForm from './TerminalForm'; // Assume you have this component
 import EditTerminal from './EditTerminal';
 import AddToHomeScreenIcon from '@mui/icons-material/AddToHomeScreen';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import Assigner from "./AFTerminalForm";
-import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
 import Snackbar from '@mui/material/Snackbar';
 import HistoriqueTerminal from "./HistoriqueTerminal";
 import FilePresentIcon from '@mui/icons-material/FilePresent';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 const columns = [
     { id: 'marque', label: 'Marque', minWidth: 150 },
     { id: 'model', label: 'Modèle', minWidth: 150 },
@@ -46,6 +46,8 @@ const columns = [
 export default function Terminal() {
     const [rows, setRows] = useState([]);
     const [filteredRows, setFilteredRows] = useState([]);
+    const fileInputRef = useRef(null);
+    const [importExportOpen, setImportExportOpen] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -54,6 +56,7 @@ export default function Terminal() {
     const [deleteRow, setDeleteRow] = useState(null);
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
     const role = localStorage.getItem('role');
+   
     const [historiqueOpen, setHistoriqueOpen] = useState(false);
     const [filters, setFilters] = useState({
         marque: '',
@@ -62,6 +65,7 @@ export default function Terminal() {
         filliale: '',
         affectation: '',
         grade: '',
+        imei:'',
     });
     const [open, setOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -69,7 +73,10 @@ export default function Terminal() {
     const [refresh, setRefresh] = useState(false);
     const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
     const [selectedIMEI, setSelectedIMEI] = useState('');
+    const [imeiFilter, setImeiFilter] = useState('');
+    const [selectedFile, setSelectedFile] = useState(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);
@@ -78,6 +85,7 @@ export default function Terminal() {
     useEffect(() => {
         setFilteredRows(rows.filter(row => {
             return (
+                (imeiFilter === '' || row.imei.toLowerCase().includes(imeiFilter.toLowerCase())) &&
                 (filters.marque === '' || row.marque.toLowerCase().includes(filters.marque.toLowerCase())) &&
                 (filters.model === '' || row.model.toLowerCase().includes(filters.model.toLowerCase())) &&
                 (filters.fournisseur === '' || row.fournisseur.toLowerCase().includes(filters.fournisseur.toLowerCase())) &&
@@ -86,7 +94,7 @@ export default function Terminal() {
                 (filters.grade === '' || row.grade.toLowerCase().includes(filters.grade.toLowerCase())) // Add grade filter condition
             );
         }));
-    }, [filters, rows]);
+    }, [filters,imeiFilter, rows]);
 
     const fetchData = async () => {
         const token = localStorage.getItem('token');
@@ -99,9 +107,9 @@ export default function Terminal() {
         let url;
     
         if (role === 'ADMIN' || role === 'DSI') {
-            url = 'http://localhost:8089/api/terminals';
+            url = `${apiUrl}/api/terminals`;
         } else if (role === 'RSI' || role === 'SI') {
-            url = `http://localhost:8089/api/terminals/ByEmail?email=${encodeURIComponent(email)}`;
+            url = `${apiUrl}/api/terminals/ByEmail?email=${encodeURIComponent(email)}`;
         }
     
         if (url) {
@@ -122,13 +130,16 @@ export default function Terminal() {
             console.error('Invalid role, no URL to fetch data from.');
         }
     };
+    const handleFileChange = (event) => {
+        setSelectedFile(event.target.files[0]);
+    };
     const handleExport = async () => {
         try {
             // Récupérer le jeton d'authentification depuis le stockage local
             const token = localStorage.getItem('token'); // Remplacez ceci par votre méthode de récupération de jeton
 
             // Effectuer la demande GET pour récupérer le fichier Excel
-            const response = await fetch('http://localhost:8089/api/export/terminals', {
+            const response = await fetch(`${apiUrl}/api/export/terminals`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -193,7 +204,7 @@ export default function Terminal() {
           const email = localStorage.getItem('email');
           const id = deleteRow.id;
     
-          const url = `http://localhost:8089/api/terminals/${id}?email=${encodeURIComponent(email)}`;
+          const url = `${apiUrl}/api/terminals/${id}?email=${encodeURIComponent(email)}`;
     
           await axios.delete(url, {
             headers: {
@@ -254,27 +265,68 @@ export default function Terminal() {
         setHistoriqueOpen(true);
        
     };
+    const handleImport = async () => {
+        if (!selectedFile) {
+            alert("Aucun fichier sélectionné");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/api/terminals/import`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log('Fichier importé avec succès');
+                setSelectedFile(null); // Reset file selection
+                setImportExportOpen(false); // Close dialog
+                setRefresh(!refresh); // Refresh data
+            } else {
+                alert(' 1. Veuillez vérifier si le fichier csv est ouvert.\n2. Assurez-vous que les données n’existent pas déjà.\n3.  Le schéma du fichier CSV doit être le suivant :  Marque	Model	Ram	Rom	IMEI	Date Acquisition	Garantie	Fournisseur	Filliale	Grade');
+            }
+        } catch (error) {
+            alert('Erreur Au niveau Serveur');
+        }
+    };
     const formatBoolean = (value) => value ? 'Oui' : 'Non';
 
     return (
         <Paper sx={{ width: '100%', height: "auto", overflow: 'hidden', marginTop: "25px" }}>
             <Box sx={{ padding: 2, display: 'flex', gap: 2 }}>
-                <FormControl className="custom-form-control" variant="outlined"sx={{minWidth:"125px"}}>
-                    <InputLabel>Marque</InputLabel>
-                    <Select
-                        name="marque"
-                        value={filters.marque}
-                        onChange={handleFilterChange}
-                        label="Marque"
-                    >
-                        <MenuItem value="">Tous</MenuItem>
-                        {[...new Set(rows.map(row => row.marque))].map(marque => (
-                            <MenuItem key={marque} value={marque}>
-                                {marque}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+            <TextField 
+                    label="IMEI" 
+                    variant="outlined" 
+                    value={imeiFilter}
+                    onChange={(e) => setImeiFilter(e.target.value)}
+                    sx={{
+                        marginBottom: 2,
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: '#4B0082', // Couleur de la bordure
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#4B0082', // Couleur de la bordure au survol
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: '#4B0082', // Couleur du label
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+                        },
+                      }}
+                />
                 <FormControl className="custom-form-control" variant="outlined" sx={{ minWidth: "125px" }}>
         <InputLabel>Grade</InputLabel>
         <Select
@@ -341,13 +393,15 @@ export default function Terminal() {
                     </Select>
                 </FormControl>
                 {role === 'ADMIN' && (
-                <Button
-                    variant="contained"
-                    sx={{marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
-                    onClick={handleExport}
-                >
-                   <FilePresentIcon />
-                </Button>
+                <>
+                    <Button
+                        variant="contained"
+                        sx={{ marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
+                        onClick={() => setImportExportOpen(true)}
+                    >
+                        <ImportExportIcon />
+                    </Button>
+                </>
             )}
                 {role === 'ADMIN' && (  <Button variant="contained" sx={{ height:"50px",backgroundColor:"#B22222" }}  onClick={handleHistorique}>
                     H
@@ -437,7 +491,30 @@ export default function Terminal() {
     onAssign={() => setRefresh(!refresh)} />
                 </DialogContent>
             </Dialog>
-             {/* Snackbar for success/error messages */}
+            <Dialog open={importExportOpen} onClose={() => setImportExportOpen(false)}>
+                <DialogTitle sx={{color : "green"}}>Choisir une action</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Veuillez sélectionner si vous souhaitez exporter ou importer des données.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleExport} sx={{color : "#4B0082"}}>Exporter</Button>
+                    <input
+                        accept=".xlsx, .xls"
+                        type="file"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                    />
+                    <Button onClick={() => fileInputRef.current.click()} sx={{color : "#4B0082"}}>
+                        choisir Un fichier excel
+                    </Button>
+                    <Button onClick={handleImport} sx={{color : "#4B0082"}}>
+            Importer
+        </Button>
+                </DialogActions>
+            </Dialog>
              <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
                 <Alert onClose={handleSnackbarClose} severity="success">
                     {snackbarMessage}

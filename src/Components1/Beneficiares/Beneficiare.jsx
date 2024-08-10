@@ -17,7 +17,7 @@ export default function Numero() {
     const [numeros, setNumeros] = useState([]);
     const [terminals, setTerminals] = useState([]);
     const [code, setCode] = useState(localStorage.getItem("code"));
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
@@ -25,7 +25,7 @@ export default function Numero() {
     useEffect(() => {
         if (code) {
             if (value === 0) {
-                axios.get(`http://localhost:8089/api/beneficiares/by-code/${code}`)
+                axios.get(`${apiUrl}/api/beneficiares/by-code/${code}`)
                     .then(response => {
                         console.log('Beneficiare response:', response.data);
                         if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
@@ -37,11 +37,11 @@ export default function Numero() {
                     })
                     .catch(error => console.error('Error fetching beneficiare:', error));
             } else if (value === 1) {
-                axios.get(`http://localhost:8089/api/numeros/by-code/${code}`)
+                axios.get(`${apiUrl}/api/numeros/by-code/${code}`)
                     .then(response => setNumeros(response.data))
                     .catch(error => console.error('Error fetching numeros:', error));
             } else if (value === 2) {
-                axios.get(`http://localhost:8089/api/terminals/by-code/${code}`)
+                axios.get(`${apiUrl}/api/terminals/by-code/${code}`)
                     .then(response => setTerminals(response.data))
                     .catch(error => console.error('Error fetching terminals:', error));
             }

@@ -32,17 +32,18 @@ const StatusCard = ({ title, count, color }) => (
 const AffectedStatuses = () => {
   const [statusCounts, setStatusCounts] = React.useState({});
   const [loading, setLoading] = React.useState(false);
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   React.useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const token = "votre_token_ici"; // Remplacez par la méthode de récupération du token
-        const response = await axios.get('http://localhost:8089/api/afterminals/all', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const token = localStorage.getItem("token"); // Remplacez par la méthode de récupération du token
+const response = await axios.get(`${apiUrl}/api/afterminals/all`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
 
         const data = response.data;
         const counts = data.reduce((acc, item) => {

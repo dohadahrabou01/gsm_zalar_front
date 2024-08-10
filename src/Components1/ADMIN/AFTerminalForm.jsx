@@ -8,14 +8,14 @@ const AFTerminalForm = ({ open, onClose, imei, onAssign }) => {
     const [selectedBeneficiare, setSelectedBeneficiare] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const fetchBeneficiares = async () => {
             if (!imei) return; // Ensure imei is not empty
             setLoading(true);
             const token = localStorage.getItem('token');
             try {
-                const response = await axios.get(`http://localhost:8089/api/beneficiares/by-imei?imei=${imei}`, {
+                const response = await axios.get(`${apiUrl}/api/beneficiares/by-imei?imei=${imei}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setBeneficiares(response.data);
@@ -38,7 +38,7 @@ const AFTerminalForm = ({ open, onClose, imei, onAssign }) => {
         setError(null);
         try {
             await axios.post(
-                `http://localhost:8089/api/afterminals?imei=${imei}&beneficiareId=${selectedBeneficiare}&affectantEmail=${affectantEmail}`,
+               `${apiUrl}/api/afterminals?imei=${imei}&beneficiareId=${selectedBeneficiare}&affectantEmail=${affectantEmail}`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );

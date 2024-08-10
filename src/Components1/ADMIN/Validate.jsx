@@ -5,11 +5,11 @@ import { useParams } from 'react-router-dom';
 const ValidateUpdate = () => {
   const { id } = useParams();
   const [message, setMessage] = useState('');
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
     const validateUpdate = async () => {
       try {
-        const response = await axios.put(`http://localhost:8089/api/validate/${id}`);
+        const response = await axios.put(`${apiUrl}/api/validate/${id}`);
         setMessage('User update has been validated successfully.');
       } catch (error) {
         setMessage('Failed to validate the user update.');

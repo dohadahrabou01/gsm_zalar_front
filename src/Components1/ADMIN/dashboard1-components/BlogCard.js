@@ -5,14 +5,17 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import defaultImage from '../../../assets/ZALAR.png'; // Image par défaut
-
-const fetchBeneficiaires = async (libelle, token) => {
+import HistoriqueFilliale from './HistoriqueFilliale';
+const fetchBeneficiaires = async (libelle, token,apiUrl) => {
   try {
-    const response = await axios.get(`http://localhost:8089/api/beneficiares/FillialesLibelle/?Libelle=${libelle}`, {
+    
+    console.log('api',apiUrl);
+    const response = await axios.get(`${apiUrl}/api/beneficiares/FillialesLibelle/?Libelle=${libelle}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log('api',apiUrl);
     console.log('API response for', libelle, ':', response); // Log the entire response object
     return response.data; // Return the data directly if it's the count
   } catch (error) {
@@ -21,19 +24,22 @@ const fetchBeneficiaires = async (libelle, token) => {
   }
 };
 
-
+const apiUrl = process.env.REACT_APP_API_URL;
 const FilialeCard = ({ filiale, onEdit, onDelete }) => {
   const [beneficiairesCount, setBeneficiairesCount] = useState(0);
+ // Pour afficher/masquer l'historique
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
     if (!token) {
       console.error('Token not found in localStorage. Make sure the user is logged in.');
       return;
     }
 
     const fetchData = async () => {
-      const count = await fetchBeneficiaires(filiale.libelle, token);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const count = await fetchBeneficiaires(filiale.libelle, token,apiUrl);
       console.log(`Nombre de bénéficiaires pour ${filiale.libelle}:`, count); // Log the count value
       setBeneficiairesCount(count);
     };
@@ -51,7 +57,7 @@ const FilialeCard = ({ filiale, onEdit, onDelete }) => {
     }
     return defaultImage; // Image par défaut si aucune image n'est fournie ou erreur
   };
-
+ 
   return (
     <Card style={{ height: "335px" }}>
       <img src={getImageForFiliale()} alt={filiale.libelle} style={{ width: '100%', height: 200, objectFit: 'cover' }} />
@@ -88,20 +94,11 @@ export default function MediaCard() {
   const [newLibelle, setNewLibelle] = useState('');
   const [newLieu, setNewLieu] = useState('');
   const [newImage, setNewImage] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('Token not found in localStorage. Make sure the user is logged in.');
-      return;
-    }
-
-    fetchData(token);
-  }, []);
-
+  const [refresh, setRefresh] = useState(false);
   const fetchData = async (token) => {
     try {
-      const response = await axios.get('http://localhost:8089/api/filliales/filliales', {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await axios.get(`${apiUrl}/api/filliales/filliales`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,6 +108,18 @@ export default function MediaCard() {
       console.error('Erreur serveur:', error.response ? error.response.status : error.message);
     }
   };
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('Token not found in localStorage. Make sure the user is logged in.');
+      return;
+    }
+  
+    fetchData(token);
+  }, [refresh]); // Ajoute refresh ici
+  
+
+  
 
   const handleOpen = (filiale = null) => {
     if (filiale) {
@@ -127,7 +136,7 @@ export default function MediaCard() {
     }
     setOpen(true);
   };
-
+  const [historiqueOpen, setHistoriqueOpen] = useState(false);
   const handleClose = () => {
     setOpen(false);
     setNewLibelle('');
@@ -135,6 +144,14 @@ export default function MediaCard() {
     setNewImage(null);
     setSelectedFiliale(null);
   };
+  const handleHistoriqueClose = () => {
+    setHistoriqueOpen(false);
+    setRefresh(!refresh);
+};
+
+const handleHistorique = () => {
+    setHistoriqueOpen(true);
+};
 
   const handleSubmit = async () => {
     const token = localStorage.getItem('token');
@@ -142,37 +159,62 @@ export default function MediaCard() {
       console.error('Token not found in localStorage. Make sure the user is logged in.');
       return;
     }
-
+  
+    // Taille maximale autorisée (10 Mo en octets)
+    const MAX_SIZE = 10 * 1024 * 1024; // 10 Mo
+  
+    // Types de fichiers autorisés
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
+  
     const formData = new FormData();
     formData.append('libelle', newLibelle);
     formData.append('lieu', newLieu);
+  
     if (newImage) {
+      // Vérifiez la taille du fichier
+      if (newImage.size > MAX_SIZE) {
+        console.error('Le fichier est trop volumineux. La taille maximale autorisée est de 10 Mo.');
+        alert('Le fichier est trop volumineux. La taille maximale autorisée est de 10 Mo.');
+        return;
+      }
+  
+      // Vérifiez le type du fichier
+      if (!ALLOWED_TYPES.includes(newImage.type)) {
+        console.error('Type de fichier non autorisé. Veuillez télécharger une image au format JPG, JPEG ou PNG.');
+        alert('Type de fichier non autorisé. Veuillez télécharger une image au format JPG, JPEG ou PNG.');
+        return;
+      }
+  
       formData.append('image', newImage);
     }
-
+  
+    const apiUrl = process.env.REACT_APP_API_URL;
+  
     try {
       if (editMode && selectedFiliale) {
-        await axios.put(`http://localhost:8089/api/filliales/${selectedFiliale.id}`, formData, {
+        await axios.put(`${apiUrl}/api/filliales/${selectedFiliale.id}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
       } else {
-        await axios.post('http://localhost:8089/api/filliales', formData, {
+        await axios.post(`${apiUrl}/api/filliales`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
       }
-
+  
       fetchData(token);
       handleClose();
     } catch (error) {
       console.error('Erreur serveur:', error.response ? error.response.status : error.message);
     }
   };
+  
+  const role=localStorage.getItem('role');
 
   const handleDelete = async (id) => {
     const token = localStorage.getItem('token');
@@ -189,7 +231,7 @@ export default function MediaCard() {
     }
     
     try {
-      await axios.delete(`http://localhost:8089/api/filliales/${id}?email=${encodeURIComponent(email)}`, {
+      await axios.delete(`${apiUrl}/api/filliales/${id}?email=${encodeURIComponent(email)}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -203,6 +245,22 @@ export default function MediaCard() {
 
   return (
     <Box marginTop={3}>
+   {role === 'ADMIN' && (
+    <Button
+        variant="contained"
+        sx={{
+            marginLeft: 'auto',
+            marginBottom:"10px", // Aligne le bouton à droite dans son conteneur
+            height: '50px',
+            backgroundColor: '#B22222',
+            display: 'block', // Assure que le bouton se comporte comme un élément de bloc
+        }}
+        onClick={handleHistorique}
+    >
+        H
+    </Button>
+)}
+
       <Grid container spacing={4}>
         {filiales.map((filiale) => (
           <Grid item xs={12} sm={6} md={4} key={filiale.id}>
@@ -231,7 +289,7 @@ export default function MediaCard() {
       </Grid>
 
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editMode ? 'Modifier la filiale' : 'Ajouter une nouvelle filiale'}</DialogTitle>
+        <DialogTitle sx={{color:"green"}}>{editMode ? 'Modifier la filiale' : 'Ajouter une nouvelle filiale'}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -240,6 +298,26 @@ export default function MediaCard() {
             fullWidth
             value={newLibelle}
             onChange={(e) => setNewLibelle(e.target.value)}
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                      borderColor: '#4B0082', // Couleur de la bordure
+                  },
+                  '&:hover fieldset': {
+                      borderColor: '#4B0082', // Couleur de la bordure au survol
+                  },
+                  '&.Mui-focused fieldset': {
+                      borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                  },
+              },
+              '& .MuiInputLabel-root': {
+                  color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+          }}
           />
           <TextField
             margin="dense"
@@ -247,6 +325,26 @@ export default function MediaCard() {
             fullWidth
             value={newLieu}
             onChange={(e) => setNewLieu(e.target.value)}
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                      borderColor: '#4B0082', // Couleur de la bordure
+                  },
+                  '&:hover fieldset': {
+                      borderColor: '#4B0082', // Couleur de la bordure au survol
+                  },
+                  '&.Mui-focused fieldset': {
+                      borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                  },
+              },
+              '& .MuiInputLabel-root': {
+                  color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+          }}
           />
           <label htmlFor="upload-image">
             <input
@@ -255,21 +353,28 @@ export default function MediaCard() {
               name="upload-image"
               type="file"
               onChange={(e) => setNewImage(e.target.files[0])}
+              
             />
-            <Button variant="contained" component="span"sx={{backgrounColor:"green"}}>
+            <Button variant="contained" component="span"sx={{backgroundColor:"green"}}>
               Upload Image
             </Button>
           </label>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
+          <Button onClick={handleClose} sx={{color:"red"}}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit} color="primary">
+          <Button onClick={handleSubmit} sx={{color:"green"}}>
             {editMode ? 'Enregistrer' : 'Ajouter'}
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={historiqueOpen} onClose={handleHistoriqueClose} fullWidth maxWidth="md">
+                <DialogTitle sx={{ color: 'green' }}>Historique des Filliales</DialogTitle>
+                <DialogContent>
+                    <HistoriqueFilliale  />
+                </DialogContent>
+            </Dialog>
     </Box>
   );
 }

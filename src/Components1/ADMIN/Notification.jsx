@@ -11,9 +11,10 @@ const Admin = () => {
   const token = localStorage.getItem('token'); // Adjust token retrieval as needed
   const expired = localStorage.getItem('expirationTime');
   const currentTime = new Date().getTime();
+  const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
     if (token) {
-      axios.get('http://localhost:8089/api/notifications/ongoing', {
+      axios.get(`${apiUrl}/api/notifications/ongoing`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

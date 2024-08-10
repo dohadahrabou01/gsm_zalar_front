@@ -13,13 +13,13 @@ const ForfaitForm = ({ onClose }) => {
     const [prix, setPrix] = useState('');
     const [forfaits, setForfaits] = useState([{ libelle: '', prix: '' }]);
     const token = 'YOUR_TOKEN_HERE'; // Remplacez par votre token réel
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     const handleSubmit = async (e) => {
         e.preventDefault();
         const forfait = forfaits[0]; // Assuming you want to send only the first forfait
 
         try {
-            const response = await axios.post('http://localhost:8089/api/forfaits', forfait, {
+            const response = await axios.post(`${apiUrl}/api/forfaits`, forfait, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

@@ -19,7 +19,7 @@ const EditTerminal = ({ terminal, onClose }) => {
     const [filliales, setFilliales] = useState([]);
     const [loadingFournisseurs, setLoadingFournisseurs] = useState(true);
     const [loadingFilliales, setLoadingFilliales] = useState(true);
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         if (terminal) {
             setFormData(terminal);
@@ -34,7 +34,7 @@ const EditTerminal = ({ terminal, onClose }) => {
                 const userEmail = localStorage.getItem('email');
 
                 // Fetch fournisseurs
-                const fournisseurResponse = await axios.get('http://localhost:8089/api/fournisseurs', {
+                const fournisseurResponse = await axios.get(`${apiUrl}/api/fournisseurs`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -44,9 +44,9 @@ const EditTerminal = ({ terminal, onClose }) => {
                 // Fetch filliales based on role
                 let fillialeResponse;
                 if (userRole === 'ADMIN' || userRole === 'DSI') {
-                    fillialeResponse = await axios.get('http://localhost:8089/api/filliales/filliales');
+                    fillialeResponse = await axios.get(`${apiUrl}/api/filliales/filliales`);
                 } else if (userRole === 'RSI' || userRole === 'SI') {
-                    fillialeResponse = await axios.get(`http://localhost:8089/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
+                    fillialeResponse = await axios.get(`${apiUrl}/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
                 }
                 setFilliales(fillialeResponse?.data || []);
             } catch (error) {
@@ -71,7 +71,7 @@ const EditTerminal = ({ terminal, onClose }) => {
     const handleSubmit = async () => {
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:8089/api/terminals/${formData.id}`, formData, {
+            await axios.put(`${apiUrl}/api/terminals/${formData.id}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

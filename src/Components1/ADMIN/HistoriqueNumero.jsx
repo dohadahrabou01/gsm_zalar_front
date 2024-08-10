@@ -32,6 +32,7 @@ export default function Compte() {
     const [open, setOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
     const [refresh, setRefresh] = useState(false);
+    const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -40,7 +41,7 @@ export default function Compte() {
 
     const fetchHistorique = async (token) => {
         try {
-            const response = await axios.get('http://localhost:8089/api/numeros/Historique', {
+            const response = await axios.get(`${apiUrl}/api/numeros/Historique`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -64,7 +65,7 @@ export default function Compte() {
         try {
             const id = row.id;
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:8089/api/numeros/recuperer/${id}`, {
+            await axios.put(`${apiUrl}/api/numeros/recuperer/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

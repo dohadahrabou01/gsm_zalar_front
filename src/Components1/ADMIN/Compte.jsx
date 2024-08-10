@@ -44,6 +44,7 @@ export default function Compte() {
     const [page, setPage] = useState(0);
     const role = localStorage.getItem('role');
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const apiUrl = process.env.REACT_APP_API_URL;
     const [filters, setFilters] = useState({
         nomPrenom: '',
         role: '',
@@ -85,9 +86,9 @@ export default function Compte() {
         let url;
     
         if (role === 'ADMIN' || role === 'DSI') {
-          url = 'http://localhost:8089/api/users/all';
+          url = `${apiUrl}/api/users/all`;
         } else if (role === 'RSI' || role === 'SI') {
-          url = `http://localhost:8089/api/users/ByEmail?email=${encodeURIComponent(email)}`;
+          url = `${apiUrl}/api/users/ByEmail?email=${encodeURIComponent(email)}`;
         }
       
         if (!url) {
@@ -212,7 +213,7 @@ export default function Compte() {
             try {
                 const id = selectedRowToDelete.id;
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:8089/api/users/delete/${id}`, {
+                await axios.delete(`${apiUrl}/api/users/delete/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

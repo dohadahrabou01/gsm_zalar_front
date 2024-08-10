@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import Paper from '@mui/material/Paper';
 import Accordion from 'react-bootstrap/Accordion';
 import Table from '@mui/material/Table';
@@ -20,14 +21,12 @@ import HistoriqueCompte from './HistoriqueNumero';
 import Button from '@mui/material/Button';
 import NumeroForm from './NumeroForm'; // Assume you have this component
 import EditNumero from './EditNumero';
-import DialogActions from '@mui/material/DialogActions';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import TextField from '@mui/material/TextField';
+
 import "./Compte.css";
 import Assigner from "./AFNumeroForm";
 import Snackbar from '@mui/material/Snackbar';
@@ -47,6 +46,7 @@ const columns = [
 
 export default function Numero() {
     const [rows, setRows] = useState([]);
+    const fileInputRef = useRef(null);
     const [filteredRows, setFilteredRows] = useState([]);
     const [page, setPage] = useState(0);
     const [activeKey, setActiveKey] = useState(null);
@@ -68,11 +68,14 @@ export default function Numero() {
     const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
     const [historiqueOpen, setHistoriqueOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [importExportOpen, setImportExportOpen] = useState(false);
     const [numeroFilter, setNumeroFilter] = useState('');
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error', 'warning', 'info'
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);
@@ -90,6 +93,9 @@ export default function Numero() {
             );
         }));
     }, [filters, numeroFilter, rows]); 
+    const handleFileChange = (event) => {
+        setSelectedFile(event.target.files[0]);
+    };
 
     const fetchData = async () => {
         const token = localStorage.getItem('token');
@@ -102,9 +108,9 @@ export default function Numero() {
         let url;
     
         if (role === 'ADMIN' || role === 'DSI') {
-            url = 'http://localhost:8089/api/numeros';
+            url = `${apiUrl}/api/numeros`;
         } else if (role === 'RSI' || role === 'SI') {
-            url = `http://localhost:8089/api/numeros/ByEmail?email=${encodeURIComponent(email)}`;
+            url = `${apiUrl}/api/numeros/ByEmail?email=${encodeURIComponent(email)}`;
         }
     
         if (url) {
@@ -184,7 +190,7 @@ export default function Numero() {
                 const id = selectedRowToDelete.id; // Use selectedRowToDelete instead of row
     
                 // Construisez l'URL avec l'ID et l'email
-                const url = `http://localhost:8089/api/numeros/${id}?email=${encodeURIComponent(email)}`;
+                const url = `${apiUrl}/api/numeros/${id}?email=${encodeURIComponent(email)}`;
                 await axios.delete(url, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -210,7 +216,7 @@ export default function Numero() {
             const token = localStorage.getItem('token'); // Remplacez ceci par votre méthode de récupération de jeton
 
             // Effectuer la demande GET pour récupérer le fichier Excel
-            const response = await fetch('http://localhost:8089/api/export/numeros', {
+            const response = await fetch(`${apiUrl}/api/export/numeros`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -260,6 +266,38 @@ export default function Numero() {
         setHistoriqueOpen(true);
        
     };
+    const handleImport = async () => {
+        if (!selectedFile) {
+            alert("Aucun fichier sélectionné");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/api/numeros/import`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log('Fichier importé avec succès');
+                setSelectedFile(null); // Reset file selection
+                setImportExportOpen(false); // Close dialog
+                setRefresh(!refresh); // Refresh data
+            } else {
+                alert('1. Veuillez vérifier si le csv Excel est ouvert.\n2. Assurez-vous que les données n’existent pas déjà.\n3. Le schéma du fichier CSV doit être le suivant : Numero;Serie;Pin;Puk;Operateur;Actif;Forfait;Filiale.');
+            }
+        } catch (error) {
+            alert('Erreur Au niveau Serveur');
+        }
+    };
+    
 
     // Helper function to display "Oui" or "Non"
     const formatBoolean = (value) => value ? 'Oui' : 'Non';
@@ -376,13 +414,15 @@ export default function Numero() {
                     </Select>
                 </FormControl>
                 {role === 'ADMIN' && (
-                <Button
-                    variant="contained"
-                    sx={{marginLeft: "auto", height: '50px', backgroundColor: '#4B0082' }}
-                    onClick={handleExport}
-                >
-                   <FilePresentIcon />
-                </Button>
+                <>
+                    <Button
+                        variant="contained"
+                        sx={{ marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
+                        onClick={() => setImportExportOpen(true)}
+                    >
+                        <ImportExportIcon />
+                    </Button>
+                </>
             )}
                 {role === 'ADMIN' && (    <Button variant="contained" sx={{ height:"50px",backgroundColor:"#B22222" }}  onClick={handleHistorique}>
                     H
@@ -492,6 +532,30 @@ export default function Numero() {
                 <DialogContent>
                     <EditNumero row={selectedRow} onClose={handleEditDialogClose} />
                 </DialogContent>
+            </Dialog>
+            <Dialog open={importExportOpen} onClose={() => setImportExportOpen(false)}>
+                <DialogTitle sx={{color : "green"}}>Choisir une action</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Veuillez sélectionner si vous souhaitez exporter ou importer des données.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleExport} sx={{color : "#4B0082"}}>Exporter</Button>
+                    <input
+                        accept=".xlsx, .xls"
+                        type="file"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                    />
+                    <Button onClick={() => fileInputRef.current.click()} sx={{color : "#4B0082"}}>
+                        choisir Un fichier excel
+                    </Button>
+                    <Button onClick={handleImport} sx={{color : "#4B0082"}}>
+            Importer
+        </Button>
+                </DialogActions>
             </Dialog>
             <Dialog open={assignmentDialogOpen}  onClose={handleAssignmentDialogClose}>
                 <DialogTitle sx={{color:"green"}}>Affecter le Numero</DialogTitle>

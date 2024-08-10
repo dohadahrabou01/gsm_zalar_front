@@ -16,7 +16,7 @@ import './Login.css';
 import { useEffect, useState } from 'react';
 
 const defaultTheme = createTheme();
-
+const apiUrl = process.env.REACT_APP_API_URL;
 axios.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');
@@ -80,20 +80,22 @@ export default function SignIn({ onLogin }) {
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
-
+    console.log("API URL:", apiUrl);
+    console.log('Réponse de connexion:', `${apiUrl}/api/auth/signin`);
     setEmailError('');
     setPasswordError('');
     setError('');
-
+  
+  
     try {
-      const response = await axios.post('http://localhost:8089/api/auth/signin', { email, password });
-      console.log('Réponse de connexion:', response.data);
-
+      const response = await axios.post(`${apiUrl}/api/auth/signin`, { email, password });
+     
+  
       const { token, role } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
       localStorage.setItem('email', email);
-
+  
       const tokenData = { token, role, email };
       onLogin(tokenData);
     } catch (error) {
@@ -106,6 +108,7 @@ export default function SignIn({ onLogin }) {
       }
     }
   };
+  
 
   const handleForgotPasswordClick = () => {
     navigate('/forget');

@@ -14,7 +14,7 @@ const defaultTheme = createTheme();
 
 export default function Reset() {
   const navigate = useNavigate();
-  const token = new URLSearchParams(window.location.search).get('token');
+  
   useEffect(() => {
     // Supprimer les éléments spécifiques du localStorage
     localStorage.removeItem('token');
@@ -22,8 +22,8 @@ export default function Reset() {
     localStorage.removeItem('role');
   
   }, []); 
-   // Récupérer le token de l'URL
- 
+  const token = new URLSearchParams(window.location.search).get('token');
+  const apiUrl = process.env.REACT_APP_API_URL;
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -35,7 +35,7 @@ export default function Reset() {
 
     if (newPassword === confirmPassword) {
         try {
-            const response = await axios.post(`http://localhost:8089/api/auth/reset-password`, {
+            const response = await axios.post(`${apiUrl}/api/auth/reset-password`, {
                 token,
                 newPassword
             });

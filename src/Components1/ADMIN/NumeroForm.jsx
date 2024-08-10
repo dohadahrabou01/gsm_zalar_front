@@ -27,7 +27,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
     const [forfaits, setForfaits] = useState([]);
     const [loadingFilliales, setLoadingFilliales] = useState(true);
     const [loadingForfaits, setLoadingForfaits] = useState(true);
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
       const fetchFilliales = async () => {
         const userRole = localStorage.getItem('role');
@@ -36,9 +36,9 @@ const NumeroForm = ({ row = {}, onClose }) => {
     
         try {
             if (userRole === 'ADMIN' || userRole === 'DSI') {
-                fillialeResponse = await axios.get('http://localhost:8089/api/filliales/filliales');
+                fillialeResponse = await axios.get(`${apiUrl}/api/filliales/filliales`);
             } else if (userRole === 'RSI' || userRole === 'SI') {
-                fillialeResponse = await axios.get(`http://localhost:8089/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
+                fillialeResponse = await axios.get(`${apiUrl}/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
             } else {
                 console.warn('Rôle d\'utilisateur non reconnu');
                 return;
@@ -54,7 +54,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
     
         const fetchForfaits = async () => {
             try {
-                const response = await axios.get('http://localhost:8089/api/forfaits/forfaits');
+                const response = await axios.get(`${apiUrl}/api/forfaits/forfaits`);
                 setForfaits(response.data);
             } catch (error) {
                 console.error('Erreur lors de la récupération des forfaits:', error);
@@ -83,11 +83,11 @@ const NumeroForm = ({ row = {}, onClose }) => {
 
         try {
             if (row.id) {
-                await axios.put(`http://localhost:8089/api/numeros/${row.id}`, formData, {
+                await axios.put(`${apiUrl}/api/numeros/${row.id}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             } else {
-                await axios.post('http://localhost:8089/api/numeros', formData, {
+                await axios.post(`${apiUrl}/api/numeros`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }

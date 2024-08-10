@@ -44,7 +44,7 @@ export default function FournisseurTable() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
    const userEmail=localStorage.getItem("email");
-
+   const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         fetchFournisseurs();
@@ -53,7 +53,7 @@ export default function FournisseurTable() {
     const fetchFournisseurs = async () => {
         const token = localStorage.getItem('token'); // Assurez-vous que le token est stocké dans localStorage
         try {
-            const response = await axios.get('http://localhost:8089/api/fournisseurs', {
+            const response = await axios.get(`${apiUrl}/api/fournisseurs`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -120,7 +120,7 @@ export default function FournisseurTable() {
             try {
                 const id = selectedRowToDelete.id;
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:8089/api/fournisseurs/${id}?email=${encodeURIComponent(userEmail)}`, {
+                await axios.delete(`${apiUrl}/api/fournisseurs/${id}?email=${encodeURIComponent(userEmail)}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

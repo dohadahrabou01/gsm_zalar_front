@@ -12,7 +12,7 @@ const EditFournisseur = ({ onClose, row }) => {
     const [tel, setTel] = useState(row.tel || '');
     const [email, setEmail] = useState(row.email || '');
     const token = 'YOUR_TOKEN_HERE'; // Replace with your actual token
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         if (row) {
             setLibelle(row.libelle);
@@ -26,7 +26,7 @@ const EditFournisseur = ({ onClose, row }) => {
         const fournisseur = { libelle, tel, email };
 
         try {
-            const response = await axios.put(`http://localhost:8089/api/fournisseurs/${row.id}`, fournisseur, {
+            const response = await axios.put(`${apiUrl}/api/fournisseurs/${row.id}`, fournisseur, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

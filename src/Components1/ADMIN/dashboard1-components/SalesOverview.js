@@ -8,13 +8,13 @@ const SalesOverview = () => {
   const [simsData, setSimsData] = useState([]);
   const [filiales, setFiliales] = useState([]);
   const [seriesData, setSeriesData] = useState([]);
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   const token = localStorage.getItem('token'); // Supposons que le token est stocké dans localStorage
 
   useEffect(() => {
     const fetchTerminalsData = async () => {
       try {
-        const response = await axios.get('http://localhost:8089/api/terminals', {
+        const response = await axios.get(`${apiUrl}/api/terminals`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -27,7 +27,7 @@ const SalesOverview = () => {
 
     const fetchSimsData = async () => {
       try {
-        const response = await axios.get('http://localhost:8089/api/numeros', {
+        const response = await axios.get(`${apiUrl}/api/numeros`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

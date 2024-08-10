@@ -8,11 +8,11 @@ const FournisseurForm = ({ onClose }) => {
     const [libelle, setLibelle] = useState('');
     const [tel, setTel] = useState('');
     const [email, setEmail] = useState('');
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8089/api/fournisseurs', {
+            const response = await axios.post(`${apiUrl}/api/fournisseurs`, {
                 libelle,
                 tel,
                 email,

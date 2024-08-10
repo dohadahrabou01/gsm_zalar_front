@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 
@@ -30,6 +30,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const [theme, colorMode] = useMode();
 
   useEffect(() => {
@@ -38,7 +39,6 @@ function App() {
     const expirationTime = localStorage.getItem('expirationTime');
     const currentTime = new Date().getTime();
     
-
     if (token && expirationTime && storedRole && currentTime < expirationTime) {
       setIsLoggedIn(true);
       setRole(storedRole);
@@ -49,13 +49,23 @@ function App() {
       localStorage.removeItem('expirationTime');
       setIsLoggedIn(false);
       setRole(null);
-      
+
+      // Redirige uniquement si l'utilisateur n'est pas sur une page /reset avec un token
+      if (
+        location.pathname !== '/forget' &&
+        location.pathname !== '/Email' &&
+        location.pathname !== '/beneficiaire' &&
+        !location.pathname.startsWith('/reset') &&
+        !location.pathname.startsWith('/validateUpdate')
+      ) {
+        navigate('/');
+      }
     }
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   const handleLogin = (tokenData) => {
     const currentTime = new Date().getTime();
-    const expirationTime = currentTime + 60 * 60 * 1000; // 1 hour in milliseconds
+    const expirationTime = currentTime +60 * 60 * 1000; // 2 minutes in milliseconds
 
     localStorage.setItem('token', tokenData.token);
     localStorage.setItem('role', tokenData.role);
@@ -148,7 +158,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <div className="app">
-          {isLoggedIn && role && !window.location.pathname.startsWith('/reset') && !window.location.pathname.startsWith('/validateUpdate') && renderSidebar()}
+          {isLoggedIn && role && !location.pathname.startsWith('/reset') && !location.pathname.startsWith('/validateUpdate') && renderSidebar()}
           <main className="content">
             <Routes>
               {!isLoggedIn ? (
@@ -158,7 +168,7 @@ function App() {
                   <Route path="/forget" element={<Forget />} />
                   <Route path="/beneficiaire" element={<BeneficiaresTab />} />
                   <Route path="/email" element={<Email />} />
-                  <Route path="/reset/*" element={<Reset />} /> {/* Handle /reset/token */}
+                  <Route path="/reset" element={<Reset />} /> {/* Handle /reset/token */}
                 </>
               ) : (
                 renderRoutes()

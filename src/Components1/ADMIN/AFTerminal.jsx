@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect,useRef, useState, useMemo } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import axios from 'axios';
 import HistoriqueAFTerminal from "./HistoriqueAFTerminal";
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import {
   Paper, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, TablePagination, Select, MenuItem, Box, InputLabel,
   FormControl, Button, TextField, Dialog, DialogTitle, DialogContent,
-  DialogActions, Snackbar, CircularProgress
+  DialogActions, Snackbar, CircularProgress,DialogContentText
 } from '@mui/material';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
 import { Edit as EditIcon, Delete as DeleteIcon, FileUpload as FileUploadIcon, AccessTime as AccessTimeIcon } from '@mui/icons-material';
@@ -33,6 +34,8 @@ const AFTerminalDisplay = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [refresh, setRefresh] = useState(false);
+  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [filters, setFilters] = useState({
     nomPrenom: '',
     filliale: '',
@@ -53,7 +56,9 @@ const AFTerminalDisplay = () => {
   const [rowToValidate, setRowToValidate] = useState(null);
   const [confirmRejectionOpen, setConfirmRejectionOpen] = useState(false);
   const [rowToReject, setRowToReject] = useState(null);
+  const [importExportOpen, setImportExportOpen] = useState(false);
   const currentUserRole = localStorage.getItem('role');
+  const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
@@ -88,9 +93,9 @@ useEffect(() => {
     let url;
 
     if (role === 'ADMIN' || role === 'DSI') {
-      url = 'http://localhost:8089/api/afterminals/all';
+      url =`${apiUrl}/api/afterminals/all`;
     } else if (role === 'RSI' || role === 'SI') {
-      url = `http://localhost:8089/api/afterminals/ByEmail?email=${encodeURIComponent(email)}`;
+      url = `${apiUrl}/api/afterminals/ByEmail?email=${encodeURIComponent(email)}`;
     }
   
     if (!url) {
@@ -139,13 +144,16 @@ const handleHistorique= () => {
     setHistoriqueOpen(true);
    
 };
+const handleFileChange = (event) => {
+  setSelectedFile(event.target.files[0]);
+};
 const handleExport = async () => {
   try {
       // Récupérer le jeton d'authentification depuis le stockage local
       const token = localStorage.getItem('token'); // Remplacez ceci par votre méthode de récupération de jeton
 
       // Effectuer la demande GET pour récupérer le fichier Excel
-      const response = await fetch('http://localhost:8089/api/export/afterminaux', {
+      const response = await fetch(`${apiUrl}/api/export/afterminaux`, {
           method: 'GET',
           headers: {
               'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -202,7 +210,7 @@ const handleExport = async () => {
       const email = localStorage.getItem('email');
       const id = deleteRow.id;
 
-      const url = `http://localhost:8089/api/afterminals/${id}?email=${encodeURIComponent(email)}`;
+      const url = `${apiUrl}/api/afterminals/${id}?email=${encodeURIComponent(email)}`;
 
       await axios.delete(url, {
         headers: {
@@ -240,7 +248,7 @@ const handleExport = async () => {
   const handleDureeChange = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:8089/api/afterminals/update-duree-max?duree=${duree}`, null, {
+      await axios.put(`${apiUrl}/api/afterminals/update-duree-max?duree=${duree}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -272,7 +280,7 @@ const handleExport = async () => {
       const email = localStorage.getItem('email');
       const id = rowToValidate.id;
 
-      await axios.put(`http://localhost:8089/api/afterminals/update/${id}`, null, {
+      await axios.put(`${apiUrl}/api/afterminals/update/${id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -295,7 +303,7 @@ const handleExport = async () => {
       const email = localStorage.getItem('email');
       const id = rowToReject.id;
 
-      await axios.put(`http://localhost:8089/api/afterminals/reject/${id}`, null, {
+      await axios.put(`${apiUrl}/api/afterminals/reject/${id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -317,7 +325,7 @@ const handleExport = async () => {
       const token = localStorage.getItem('token');
   
       // Obtenir les informations du bénéficiaire et la date d'affectation
-      const beneficiaryResponse = await axios.get(`http://localhost:8089/api/afterminals/${id}`, {
+      const beneficiaryResponse = await axios.get(`${apiUrl}/api/afterminals/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // Ajouter le token d'authentification
         }
@@ -331,7 +339,7 @@ const handleExport = async () => {
       const formattedDate = dateAffectation.replaceAll("/", "-"); // Formatage de la date si nécessaire
   
       // Télécharger le PDF
-      const pdfResponse = await axios.get(`http://localhost:8089/api/pdf/download/${id}`, {
+      const pdfResponse = await axios.get(`${apiUrl}/api/pdf/download/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // Ajouter le token d'authentification
         },
@@ -368,7 +376,7 @@ const handleExport = async () => {
         formData.append('file', file);
 
         try {
-            await axios.post(`http://localhost:8089/api/afterminals/upload/${id}`, formData, {
+            await axios.post(`${apiUrl}/api/afterminals/upload/${id}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
@@ -388,7 +396,7 @@ const handleExport = async () => {
 const handleCheckImage = async (id) => {
     const token = localStorage.getItem('token');
     try {
-        const response = await axios.get(`http://localhost:8089/api/afterminals/preuve/${id}`, {
+        const response = await axios.get(`${apiUrl}/api/afterminals/preuve/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -415,7 +423,37 @@ const handleCheckImage = async (id) => {
     }
 };
 
+const handleImport = async () => {
+  if (!selectedFile) {
+      alert("Aucun fichier sélectionné");
+      return;
+  }
 
+  try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${apiUrl}/api/afterminals/import`, {
+          method: 'POST',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+      });
+
+      if (response.ok) {
+          console.log('Fichier importé avec succès');
+          setSelectedFile(null); // Reset file selection
+          setImportExportOpen(false); // Close dialog
+          setRefresh(!refresh); // Refresh data
+      } else {
+          alert(' veuiiler verifier si le fichier  Excel est ouvert ou les donnes Deja exist');
+      }
+  } catch (error) {
+      alert('Erreur Au niveau Serveur');
+  }
+};
   const uniqueNomPrenoms = useMemo(() => Array.from(new Set(rows.map(row => row.nomPrenom))), [rows]);
 
   return (
@@ -480,13 +518,15 @@ const handleCheckImage = async (id) => {
           }}
         />
          {currentUserRole === 'ADMIN' && (
-                <Button
-                    variant="contained"
-                    sx={{marginLeft: "auto", height: '50px', backgroundColor: '#4B0082' }}
-                    onClick={handleExport}
-                >
-                   <FilePresentIcon />
-                </Button>
+                <>
+                    <Button
+                        variant="contained"
+                        sx={{ marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
+                        onClick={handleExport}
+                    >
+                        <ImportExportIcon />
+                    </Button>
+                </>
             )}
 {currentUserRole === 'ADMIN' && (
          <>
@@ -670,7 +710,30 @@ const handleCheckImage = async (id) => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
+      <Dialog open={importExportOpen} onClose={() => setImportExportOpen(false)}>
+                <DialogTitle sx={{color : "green"}}>Choisir une action</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Veuillez sélectionner si vous souhaitez exporter ou importer des données.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleExport} sx={{color : "#4B0082"}}>Exporter</Button>
+                    <input
+                        accept=".xlsx, .xls"
+                        type="file"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                    />
+                    <Button onClick={() => fileInputRef.current.click()} sx={{color : "#4B0082"}}>
+                        choisir Un fichier excel
+                    </Button>
+                    <Button onClick={handleImport} sx={{color : "#4B0082"}}>
+            Importer
+        </Button>
+                </DialogActions>
+            </Dialog>
       <Dialog open={dureeDialogOpen} onClose={handleDureeDialogClose}>
         <DialogTitle sx={{color:"green"}}>Mise à jour de la durée maximale</DialogTitle>
         <DialogContent>

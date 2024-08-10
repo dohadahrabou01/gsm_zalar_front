@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -15,19 +15,17 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Button from '@mui/material/Button';
 import UserForm from './BeneficiareForm';
 import EditBeneficiaire from './BeneficiaireEdit';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import HistoriqueCompte from './HistoriqueBeneficiaire';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import "./Compte.css";
+
 const columns = [
     { id: 'filliale', label: 'Filliale', minWidth: 150 },
     { id: 'grade', label: 'Grade', minWidth: 150 },
@@ -40,33 +38,31 @@ const columns = [
 
 export default function Beneficiaire() {
     const [rows, setRows] = useState([]);
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    const userEmail = localStorage.getItem('email');
     const [filteredRows, setFilteredRows] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const fileInputRef = useRef(null);
     const [filters, setFilters] = useState({
         nomPrenom: '',
         role: '',
         filliale: '',
         lieu: '',
-
     });
+    const [anchorEl, setAnchorEl] = useState(null);
     const [open, setOpen] = useState(false);
+    const [importExportOpen, setImportExportOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
     const [refresh, setRefresh] = useState(false);
     const [historiqueOpen, setHistoriqueOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
-const [snackbarMessage, setSnackbarMessage] = useState('');
-const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error', 'warning', 'info'
-const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
-
-
-
-
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error', 'warning', 'info'
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const role=localStorage.getItem("role");
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);
@@ -82,71 +78,62 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
             );
         }));
     }, [filters, rows]);
-    
 
     const fetchData = async () => {
-    try {
-        let response;
-        const token = localStorage.getItem('token');
-        const email = localStorage.getItem('email');
-        const role = localStorage.getItem('role');
-        
-        console.log('Role:', role);
-        console.log('Email:', email);
+        try {
+            let response;
+            const token = localStorage.getItem('token');
+            const email = localStorage.getItem('email');
+            const role = localStorage.getItem('role');
 
-        if (role === 'ADMIN' || role === 'DSI') {
-            response = await axios.get('http://localhost:8089/api/beneficiares/Beneficiaires', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-        } else if (role === 'RSI' || role === 'SI') {
-            console.log("Fetching data for RSI or SI");
-            const url = `http://localhost:8089/api/beneficiares/ByEmail?email=${encodeURIComponent(email)}`;
-            console.log('URL:', url);
-            response = await axios.get(url, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            if (role === 'ADMIN' || role === 'DSI') {
+                response = await axios.get(`${apiUrl}/api/beneficiares/Beneficiaires`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            } else if (role === 'RSI' || role === 'SI') {
+                const url = `${apiUrl}/api/beneficiares/ByEmail?email=${encodeURIComponent(email)}`;
+                response = await axios.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            }
+
+            if (response && Array.isArray(response.data)) {
+                const uniqueRows = new Map();
+                const seenKeys = new Set();
+
+                response.data.forEach(user => {
+                    const key = `${user.nom}-${user.prenom}-${user.fillialeLibelle}-${user.grade}-${user.email || 'none'}`;
+
+                    if (!seenKeys.has(key)) {
+                        seenKeys.add(key);
+                        uniqueRows.set(key, {
+                            id: user.id,
+                            filliale: user.fillialeLibelle || 'none',
+                            grade: user.grade || 'none',
+                            nom: user.nom || 'none',
+                            prenom: user.prenom || 'none',
+                            code: user.code || 'none',
+                            multiple: user.multiple || 'none',
+                        });
+                    }
+                });
+
+                setRows(Array.from(uniqueRows.values()));
+            } else {
+                console.warn('Response data is not an array or is empty:', response.data);
+            }
+        } catch (error) {
+            console.error('There was an error fetching the data!', error.response ? error.response.data : error.message);
         }
+    };
 
-        if (response && Array.isArray(response.data)) {
-            console.log('Response data:', response.data);
-            
-            const uniqueRows = new Map();
-            const seenKeys = new Set();
-
-            response.data.forEach(user => {
-                const key = `${user.nom}-${user.prenom}-${user.fillialeLibelle}-${user.grade}-${user.email || 'none'}`;
-                
-                if (!seenKeys.has(key)) {
-                    seenKeys.add(key);
-                    uniqueRows.set(key, {
-                        id: user.id,
-                        filliale: user.fillialeLibelle || 'none',
-                        grade: user.grade || 'none',
-                        nom: user.nom || 'none',
-                        prenom: user.prenom || 'none',
-                        code: user.code || 'none',
-                        multiple: user.multiple || 'none',
-                    });
-                }
-            });
-
-            console.log('Unique rows:', Array.from(uniqueRows.values()));
-            setRows(Array.from(uniqueRows.values()));
-        } else {
-            console.warn('Response data is not an array or is empty:', response.data);
-        }
-    } catch (error) {
-        console.error('There was an error fetching the data!', error.response ? error.response.data : error.message);
-    }
-};
-
-    
-    
-    
+    const handleDialogOpen = () => {
+        setOpen(true);
+    };
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -164,6 +151,7 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
             [name]: value === 'Tous' ? '' : value,
         }));
     };
+
     const openSnackbar = (message, severity) => {
         setSnackbarMessage(message);
         setSnackbarSeverity(severity);
@@ -175,9 +163,6 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
         setEditOpen(true);
     };
 
-    
-    
-
     const handleAdd = () => {
         setOpen(true);
     };
@@ -186,59 +171,54 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
         setOpen(false);
         setRefresh(!refresh);
     };
+
     const handleHistoriqueClose = () => {
         setHistoriqueOpen(false);
         setRefresh(!refresh);
     };
-    const handleHistorique= () => {
+
+    const handleHistorique = () => {
         setHistoriqueOpen(true);
-       
     };
+
     const handleEditDialogClose = () => {
         setEditOpen(false);
         setRefresh(!refresh);
     };
+
     const handleDelete = (row) => {
         openConfirmDeleteDialog(row);
     };
+
     const openConfirmDeleteDialog = (row) => {
         setSelectedRowToDelete(row);
         setConfirmDeleteOpen(true);
     };
-    
+
     const closeConfirmDeleteDialog = () => {
         setConfirmDeleteOpen(false);
         setSelectedRowToDelete(null);
     };
+
     const handleExport = async () => {
         try {
-            // Récupérer le jeton d'authentification depuis le stockage local
-            const token = localStorage.getItem('token'); // Remplacez ceci par votre méthode de récupération de jeton
-
-            // Effectuer la demande GET pour récupérer le fichier Excel
-            const response = await fetch('http://localhost:8089/api/export/beneficiares', {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/api/export/beneficiares`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    'Authorization': `Bearer ${token}`, // Ajouter le jeton d'authentification
+                    'Authorization': `Bearer ${token}`,
                 },
             });
 
             if (response.ok) {
-                // Convertir la réponse en blob
                 const blob = await response.blob();
-                
-                // Créer un objet URL pour le blob
                 const url = window.URL.createObjectURL(blob);
-                
-                // Créer un élément de lien temporaire et déclencher le téléchargement
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = 'beneficiares.xlsx';
                 document.body.appendChild(link);
                 link.click();
-                
-                // Nettoyer l'objet URL
                 window.URL.revokeObjectURL(url);
             } else {
                 console.error('Erreur lors de l\'exportation:', response.statusText);
@@ -248,15 +228,49 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
         }
     };
 
+    const handleFileChange = (event) => {
+        setSelectedFile(event.target.files[0]);
+    };
+
+    const handleImport = async () => {
+        if (!selectedFile) {
+            alert("Aucun fichier sélectionné");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/api/beneficiares/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log('Fichier importé avec succès');
+                setSelectedFile(null); // Reset file selection
+                setImportExportOpen(false); // Close dialog
+                setRefresh(!refresh); // Refresh data
+            } else {
+                alert(' 1. Veuillez vérifier si le csv Excel est ouvert.\n2. Assurez-vous que les données n’existent pas déjà.\n3. Le schéma du fichier CSV doit être le suivant : Nom;Prenom;Grade;Filliale;Multiple.');
+            }
+        } catch (error) {
+            alert('Erreur Au niveau Serveur');
+        }
+    };
+
     const handleConfirmDelete = async () => {
         if (selectedRowToDelete) {
             try {
                 const token = localStorage.getItem('token');
-                const email = localStorage.getItem('email'); // Obtenez l'email du local storage
-                const id = selectedRowToDelete.id; // Use selectedRowToDelete instead of row
-    
-                // Construisez l'URL avec l'ID et l'email
-                const url = `http://localhost:8089/api/beneficiares/${id}?email=${encodeURIComponent(email)}`;
+                const email = localStorage.getItem('email');
+                const id = selectedRowToDelete.id;
+                const url = `${apiUrl}/api/beneficiares/${id}?email=${encodeURIComponent(email)}`;
                 await axios.delete(url, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -272,12 +286,15 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
             }
         }
     };
-    
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
 
     return (
         <Paper sx={{ width: '100%', height: "auto", overflow: 'hidden', marginTop: "65px" }}>
             <Box sx={{ padding: 2, display: 'flex', gap: 2 }}>
-                <FormControl className="custom-form-control" variant="outlined"sx={{minWidth:"125px"}}>
+                <FormControl className="custom-form-control" variant="outlined" sx={{ minWidth: "125px" }}>
                     <InputLabel>Nom Complet</InputLabel>
                     <Select
                         name="nomPrenom"
@@ -294,7 +311,7 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
                     </Select>
                 </FormControl>
 
-                <FormControl className="custom-form-control" variant="outlined"sx={{minWidth:"125px"}}>
+                <FormControl className="custom-form-control" variant="outlined" sx={{ minWidth: "125px" }}>
                     <InputLabel>Filliale</InputLabel>
                     <Select
                         name="filliale"
@@ -311,7 +328,7 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
                     </Select>
                 </FormControl>
 
-                <FormControl className="custom-form-control" variant="outlined"sx={{minWidth:"125px"}}>
+                <FormControl className="custom-form-control" variant="outlined" sx={{ minWidth: "125px" }}>
                     <InputLabel>Grade</InputLabel>
                     <Select
                         name="role"
@@ -328,25 +345,27 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
                     </Select>
                 </FormControl>
                 {role === 'ADMIN' && (
-                <Button
-                    variant="contained"
-                    sx={{ marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
-                    onClick={handleExport}
-                >
-                   <FilePresentIcon />
-                </Button>
+                <>
+                    <Button
+                        variant="contained"
+                        sx={{ marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
+                        onClick={() => setImportExportOpen(true)}
+                    >
+                        <ImportExportIcon />
+                    </Button>
+                </>
             )}
                 {role === 'ADMIN' && (
                 <Button
                     variant="contained"
-                    sx={{  height: '50px', backgroundColor: '#B22222' }}
+                    sx={{ height: '50px', backgroundColor: '#B22222' }}
                     onClick={handleHistorique}
                 >
                     H
                 </Button>
             )}
-                <Button variant="contained" sx={{height:"50px",backgroundColor:"green" }}  onClick={handleAdd}>
-                <EngineeringIcon  />
+                <Button variant="contained" sx={{ height: "50px", backgroundColor: "green" }} onClick={handleAdd}>
+                    <EngineeringIcon />
                 </Button>
             </Box>
 
@@ -362,30 +381,29 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
                         </TableRow>
                     </TableHead>
                     <TableBody>
-    {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-        <TableRow key={row.id}>
-            {columns.map((column) => (
-                <TableCell key={column.id}>
-                    {column.id === 'action' ? (
-                        <>
-                            <Button onClick={() => handleEditOpen(row)}>
-                                <EditIcon style={{ color: 'green' }}/>
-                            </Button>
-                            <Button onClick={() => handleDelete(row)}>
-                                <DeleteIcon style={{ color: 'red' }} />
-                            </Button>
-                        </>
-                    ) :column.id === 'multiple' ? (
-                        row[column.id] === true || row[column.id] === 'true' ? 'Oui' : 'Non'
-                      ) : (
-                        row[column.id]
-                    )}
-                </TableCell>
-            ))}
-        </TableRow>
-    ))}
-</TableBody>
-
+                        {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                            <TableRow key={row.id}>
+                                {columns.map((column) => (
+                                    <TableCell key={column.id}>
+                                        {column.id === 'action' ? (
+                                            <>
+                                                <Button onClick={() => handleEditOpen(row)}>
+                                                    <EditIcon style={{ color: 'green' }} />
+                                                </Button>
+                                                <Button onClick={() => handleDelete(row)}>
+                                                    <DeleteIcon style={{ color: 'red' }} />
+                                                </Button>
+                                            </>
+                                        ) : column.id === 'multiple' ? (
+                                            row[column.id] === true || row[column.id] === 'true' ? 'Oui' : 'Non'
+                                        ) : (
+                                            row[column.id]
+                                        )}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
                 </Table>
             </TableContainer>
 
@@ -404,43 +422,67 @@ const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
                 <DialogContent>
                     <UserForm onClose={handleDialogClose} />
                 </DialogContent>
-               
             </Dialog>
+
             <Dialog open={historiqueOpen} onClose={handleHistoriqueClose} fullWidth maxWidth="md">
                 <DialogTitle sx={{ color: 'green' }}>Historique des Beneficiaires</DialogTitle>
                 <DialogContent>
                     <HistoriqueCompte />
                 </DialogContent>
             </Dialog>
+
             <Dialog open={editOpen} onClose={handleEditDialogClose}>
                 <DialogTitle sx={{ color: 'green' }}>Modifier Beneficiaire</DialogTitle>
                 <DialogContent>
-                    <EditBeneficiaire  row={selectedRow} onClose={handleEditDialogClose} />
+                    <EditBeneficiaire row={selectedRow} onClose={handleEditDialogClose} />
                 </DialogContent>
-                
             </Dialog>
+
+            <Dialog open={importExportOpen} onClose={() => setImportExportOpen(false)}>
+                <DialogTitle sx={{color : "green"}}>Choisir une action</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Veuillez sélectionner si vous souhaitez exporter ou importer des données.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleExport} sx={{color : "#4B0082"}}>Exporter</Button>
+                    <input
+                        accept=".xlsx, .xls"
+                        type="file"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                    />
+                    <Button onClick={() => fileInputRef.current.click()} sx={{color : "#4B0082"}}>
+                        choisir Un fichier excel
+                    </Button>
+                    <Button onClick={handleImport} sx={{color : "#4B0082"}}>
+            Importer
+        </Button>
+                </DialogActions>
+            </Dialog>
+
             <Snackbar
-            open={snackbarOpen}
-            autoHideDuration={6000}
-            onClose={() => setSnackbarOpen(false)}
-        >
-            <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
-                {snackbarMessage}
-            </Alert>
-        </Snackbar>
-        <Dialog
-            open={confirmDeleteOpen}
-            onClose={closeConfirmDeleteDialog}
-        >
-            <DialogTitle sx={{color:"green"}}>Confirmation</DialogTitle>
-            <DialogContent>
-                <p>Êtes-vous sûr de vouloir supprimer ce Beneficiaire?</p>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={closeConfirmDeleteDialog} sx={{color:"green"}}>Annuler</Button>
-                <Button onClick={handleConfirmDelete} color="error">Supprimer</Button>
-            </DialogActions>
-        </Dialog>
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+            >
+                <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
+
+            <Dialog open={confirmDeleteOpen} onClose={closeConfirmDeleteDialog}>
+                <DialogTitle sx={{ color: "green" }}>Confirmation</DialogTitle>
+                <DialogContent>
+                    <p>Êtes-vous sûr de vouloir supprimer ce Beneficiaire?</p>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeConfirmDeleteDialog} sx={{ color: "green" }}>Annuler</Button>
+                    <Button onClick={handleConfirmDelete} color="error">Supprimer</Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 }

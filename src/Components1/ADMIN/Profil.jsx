@@ -1,13 +1,17 @@
-// UserProfile.js
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Avatar, Paper, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { Box, Typography, Avatar, IconButton, Grid, Paper, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import axios from 'axios';
-
+import SettingsIcon from '@mui/icons-material/Settings';
+import EmailConfigForm from './EmailConfig';
 const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [open, setOpen] = useState(false); // Etat pour gérer l'ouverture du formulaire d'édition
+  const [open, setOpen] = useState(false);
+  const role = localStorage.getItem('role');
+  const [hovered, setHovered] = useState(false);
+  const [openEmailConfig, setOpenEmailConfig] = useState(false); // State for email config modal
+  const apiUrl = process.env.REACT_APP_API_URL;
   const [editUser, setEditUser] = useState({
     prenom: '',
     nom: '',
@@ -15,6 +19,7 @@ const UserProfile = () => {
     role: '',
     password: '',
   });
+  const [formError, setFormError] = useState(''); // To handle form errors
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -25,7 +30,7 @@ const UserProfile = () => {
           throw new Error('Email or token not found');
         }
 
-        const response = await axios.get(`http://localhost:8089/api/users/email/${email}`, {
+        const response = await axios.get(`${apiUrl}/api/users/email/${email}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -52,6 +57,12 @@ const UserProfile = () => {
   const handleClickOpen = () => {
     setOpen(true);
   };
+  const handleCloseEmailConfig = () => {
+    setOpenEmailConfig(false);
+  };
+  const handleClickOpenEmailConfig = () => {
+    setOpenEmailConfig(true);
+  };
 
   const handleClose = () => {
     setOpen(false);
@@ -66,8 +77,14 @@ const UserProfile = () => {
 
   const handleSave = async () => {
     try {
+      // Basic validation
+      if (!editUser.prenom || !editUser.nom || !editUser.email || !editUser.password) {
+        setFormError('Please fill all required fields.');
+        return;
+      }
+
       const token = localStorage.getItem('token');
-      const response = await axios.put(`http://localhost:8089/api/users/update/${user.id}`, editUser, {
+      const response = await axios.put(`${apiUrl}/api/users/update/${user.id}`, editUser, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -75,9 +92,7 @@ const UserProfile = () => {
   
       const updatedUser = response.data;
   
-      // Vérifiez si le sessionId a changé
       if (updatedUser.sessionId !== user.sessionId) {
-        // Déconnecter l'utilisateur et rediriger vers la page de connexion
         localStorage.removeItem('token');
         localStorage.removeItem('email');
         localStorage.removeItem('role');
@@ -87,10 +102,9 @@ const UserProfile = () => {
         handleClose();
       }
     } catch (err) {
-      setError(err.message);
+      setFormError(err.message);
     }
   };
-  
 
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
@@ -100,228 +114,261 @@ const UserProfile = () => {
   return (
     <Paper
       sx={{
-        padding: 3,
-        textAlign: 'center',
-        color: 'text.secondary',
+        position: 'relative',
+        padding: 4,
         backgroundColor: 'background.paper',
-        borderRadius: 1,
-        boxShadow: 3,
-        marginTop: '125px',
+        borderRadius: 2,
+        boxShadow: 4,
+        marginTop: '100px',
       }}
     >
-      <Avatar
-        alt={`${user.prenom} ${user.nom}`}
-        sx={{
-          width: 120,
-          height: 120,
-          margin: 'auto',
-          marginBottom: 2,
-          fontSize: '2rem',
-          backgroundColor: '#4B0082',
-          color: '#fff',
-        }}
-      >
-        {initials}
-      </Avatar>
-      <Typography variant="h5" gutterBottom>
-        {user.prenom} {user.nom}
-      </Typography>
-      <Typography variant="body1" color="textSecondary">
-        {user.email}
-      </Typography>
-      <Typography variant="body1" color="textSecondary" sx={{ marginTop: 2 }}>
-        Role: {user.role}
-      </Typography>
-      {(user.role === 'RSI' || user.role === 'SI') && user.filliales.length > 0 && (
-        <Box sx={{ marginTop: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Responsable de filliales:
-          </Typography>
-          {user.filliales.map((subsidiary, index) => (
-            <Typography key={index} variant="body2" color="textSecondary">
-              {subsidiary.libelle}
-            </Typography>
-          ))}
-        </Box>
+      {role === "ADMIN" && (
+        <IconButton
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: hovered ? '#4B0082' : 'text.secondary',
+            transform: hovered ? 'rotate(45deg)' : 'rotate(0deg)',
+            transition: 'color 0.3s, transform 0.3s',
+          }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onClick={handleClickOpenEmailConfig }
+        >
+          <SettingsIcon />
+        </IconButton>
       )}
-      <Button
-  variant="outlined"
-  onClick={handleClickOpen}
-  sx={{
-    marginTop: 2,
-    borderColor: '#4B0082', // Couleur de la bordure
-    color: '#4B0082', // Couleur du texte
-    '&:hover': {
-      borderColor: '#4B0082', // Couleur de la bordure lors du survol
-      backgroundColor: 'rgba(75, 0, 130, 0.1)', // Couleur de fond lors du survol (optionnel)
-    },
-  }}
-> Edit
-      </Button>
+      <Grid container spacing={3} justifyContent="center" alignItems="center">
+        <Grid item xs={12} md={4} textAlign="center">
+          <Avatar
+            alt={`${user.prenom} ${user.nom}`}
+            sx={{
+              width: 120,
+              height: 120,
+              margin: 'auto',
+              fontSize: '2rem',
+              backgroundColor: '#4B0082',
+              color: '#fff',
+            }}
+          >
+            {initials}
+          </Avatar>
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <Typography variant="h5" gutterBottom>
+            {user.prenom} {user.nom}
+          </Typography>
+          <Typography variant="body1" color="textSecondary">
+            {user.email}
+          </Typography>
+          <Typography variant="body1" color="textSecondary" sx={{ marginTop: 2 }}>
+            Role: {user.role}
+          </Typography>
+          {(user.role === 'RSI' || user.role === 'SI') && user.filliales.length > 0 && (
+            <Box sx={{ marginTop: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Responsable de filliales:
+              </Typography>
+              {user.filliales.map((subsidiary, index) => (
+                <Typography key={index} variant="body2" color="textSecondary">
+                  {subsidiary.libelle}
+                </Typography>
+              ))}
+            </Box>
+          )}
+        </Grid>
+        <Grid item xs={12} textAlign="center">
+          <Button
+            variant="outlined"
+            onClick={handleClickOpen}
+            sx={{
+              marginTop: 2,
+              borderColor: '#4B0082',
+              color: '#4B0082',
+              '&:hover': {
+                borderColor: '#4B0082',
+                backgroundColor: 'rgba(75, 0, 130, 0.1)',
+              },
+            }}
+          >
+            Edit
+          </Button>
+        </Grid>
+      </Grid>
+  
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle sx={{color:"green"}}>Edit Profile</DialogTitle>
         <DialogContent>
-  <TextField
-    autoFocus
-    margin="dense"
-    name="prenom"
-    label="First Name"
-    type="text"
-    fullWidth
-    variant="outlined"
-    value={editUser.prenom}
-    onChange={handleChange}
-    sx={{
-      marginBottom: 2,
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure
-        },
-        '&:hover fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure au survol
-        },
-        '&.Mui-focused fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
-        },
-      },
-      '& .MuiInputLabel-root': {
-        color: '#4B0082', // Couleur du label
-      },
-      '& .MuiInputLabel-root.Mui-focused': {
-        color: '#4B0082', // Couleur du label lorsqu'il est focalisé
-      },
-    }}
-  />
-  <TextField
-    margin="dense"
-    name="nom"
-    label="Last Name"
-    type="text"
-    fullWidth
-    variant="outlined"
-    value={editUser.nom}
-    onChange={handleChange}
-    sx={{
-      marginBottom: 2,
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure
-        },
-        '&:hover fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure au survol
-        },
-        '&.Mui-focused fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
-        },
-      },
-      '& .MuiInputLabel-root': {
-        color: '#4B0082', // Couleur du label
-      },
-      '& .MuiInputLabel-root.Mui-focused': {
-        color: '#4B0082', // Couleur du label lorsqu'il est focalisé
-      },
-    }}
-  />
-  <TextField
-    margin="dense"
-    name="email"
-    label="Email"
-    type="email"
-    fullWidth
-    variant="outlined"
-    value={editUser.email}
-    onChange={handleChange}
-    
-    sx={{
-      marginBottom: 2,
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure
-        },
-        '&:hover fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure au survol
-        },
-        '&.Mui-focused fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
-        },
-      },
-      '& .MuiInputLabel-root': {
-        color: '#4B0082', // Couleur du label
-      },
-      '& .MuiInputLabel-root.Mui-focused': {
-        color: '#4B0082', // Couleur du label lorsqu'il est focalisé
-      },
-    }}
-  />
-  <TextField
-    margin="dense"
-    name="role"
-    label="Role"
-    type="text"
-    fullWidth
-    variant="outlined"
-    value={editUser.role}
-    onChange={handleChange}
-    disabled
-    sx={{
-      marginBottom: 2,
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure
-        },
-        '&:hover fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure au survol
-        },
-        '&.Mui-focused fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
-        },
-      },
-      '& .MuiInputLabel-root': {
-        color: '#4B0082', // Couleur du label
-      },
-      '& .MuiInputLabel-root.Mui-focused': {
-        color: '#4B0082', // Couleur du label lorsqu'il est focalisé
-      },
-    }}
-  />
-  <TextField
-    margin="dense"
-    name="password"
-    label="Mot de Passe"
-    type="password"
-    fullWidth
-    variant="outlined"
-    value={editUser.password}
-    onChange={handleChange}
-    sx={{
-      marginBottom: 2,
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure
-        },
-        '&:hover fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure au survol
-        },
-        '&.Mui-focused fieldset': {
-          borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
-        },
-      },
-      '& .MuiInputLabel-root': {
-        color: '#4B0082', // Couleur du label
-      },
-      '& .MuiInputLabel-root.Mui-focused': {
-        color: '#4B0082', // Couleur du label lorsqu'il est focalisé
-      },
-    }}
-  />
-</DialogContent>
-
-
+          {formError && (
+            <Typography color="error" sx={{ marginBottom: 2 }}>
+              {formError}
+            </Typography>
+          )}
+          <TextField
+            autoFocus
+            margin="dense"
+            name="prenom"
+            label="First Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={editUser.prenom}
+            onChange={handleChange}
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure
+                },
+                '&:hover fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure au survol
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            name="nom"
+            label="Last Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={editUser.nom}
+            onChange={handleChange}
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure
+                },
+                '&:hover fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure au survol
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            name="email"
+            label="Email"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={editUser.email}
+            onChange={handleChange}
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure
+                },
+                '&:hover fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure au survol
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            name="role"
+            label="Role"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={editUser.role}
+            onChange={handleChange}
+            disabled
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure
+                },
+                '&:hover fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure au survol
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+            }}
+          />
+          <TextField
+            margin="dense"
+            name="password"
+            label="Mot de Passe"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={editUser.password}
+            onChange={handleChange}
+            sx={{
+              marginBottom: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure
+                },
+                '&:hover fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure au survol
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#4B0082', // Couleur de la bordure lorsqu'il est focalisé
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#4B0082', // Couleur du label
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#4B0082', // Couleur du label lorsqu'il est focalisé
+              },
+            }}
+          />
+        </DialogContent>
         <DialogActions>
-          <Button sx={{color:"red"}} onClick={handleClose}>Annuler</Button>
-          <Button  sx={{color:"green"}} onClick={handleSave}>Modifier</Button>
+          <Button sx={{ color: 'red' }} onClick={handleClose}>Annuler</Button>
+          <Button sx={{ color: 'green' }} onClick={handleSave}>Modifier</Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={openEmailConfig} onClose={handleCloseEmailConfig}>
+                <DialogTitle sx={{color:"green"}}>Email Configurations </DialogTitle>
+                <DialogContent>
+                    <EmailConfigForm onClose={handleCloseEmailConfig} />
+                </DialogContent>
+            </Dialog>
     </Paper>
   );
 };

@@ -7,6 +7,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useNavigate } from 'react-router-dom';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import SettingsIcon from '@mui/icons-material/Settings';
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,6 +82,8 @@ const Sidebar = ({ onLogout }) => {
                 <NotificationsActiveIcon />
                 <span className="nav_name">Notifications</span>
               </a>
+               
+             
      
               <a 
   href="/comptes" 

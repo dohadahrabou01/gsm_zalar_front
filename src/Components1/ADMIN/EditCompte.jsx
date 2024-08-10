@@ -27,13 +27,14 @@ const EditUserForm = ({ userId, onClose }) => {
     const [gerantFilliale, setGerantFilliale] = useState('');
     const [userData, setUserData] = useState(null);
     const token = localStorage.getItem('token');
+    const apiUrl = process.env.REACT_APP_API_URL;
    
     const userRole = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await axios.get(`http://localhost:8089/api/users/${userId}`, {
+                const response = await axios.get(`${apiUrl}/api/users/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = response.data;
@@ -63,9 +64,9 @@ const EditUserForm = ({ userId, onClose }) => {
     
         try {
             if (userRole === 'ADMIN' || userRole === 'DSI') {
-                fillialeResponse = await axios.get('http://localhost:8089/api/filliales/filliales');
+                fillialeResponse = await axios.get(`${apiUrl}/api/filliales/filliales`);
             } else if (userRole === 'RSI' || userRole === 'SI') {
-                fillialeResponse = await axios.get(`http://localhost:8089/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
+                fillialeResponse = await axios.get(`${apiUrl}/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
             } else {
                 console.warn('Rôle d\'utilisateur non reconnu');
                 return;
@@ -93,7 +94,7 @@ const EditUserForm = ({ userId, onClose }) => {
         };
     
         try {
-            await axios.put(`http://localhost:8089/api/users/update/${userId}`, userDTO, {
+            await axios.put(`${apiUrl}/api/users/update/${userId}`, userDTO, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

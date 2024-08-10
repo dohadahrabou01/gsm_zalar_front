@@ -43,13 +43,14 @@ export default function ForfaitTable() {
     const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error', 'warning', 'info'
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         fetchForfaits();
     }, [refresh]);
 
     const fetchForfaits = async () => {
         try {
-            const response = await axios.get('http://localhost:8089/api/forfaits/forfaits');
+            const response = await axios.get(`${apiUrl}/api/forfaits/forfaits`);
             setRows(response.data);
         } catch (error) {
             console.error('There was an error fetching the forfaits data!', error);
@@ -110,7 +111,7 @@ export default function ForfaitTable() {
             try {
                 const id = selectedRowToDelete.id;
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:8089/api/forfaits/${id}`, {
+                await axios.delete(`${apiUrl}/api/forfaits/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

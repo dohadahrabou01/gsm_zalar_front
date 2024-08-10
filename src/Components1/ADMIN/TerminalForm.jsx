@@ -17,7 +17,7 @@ const TerminalForm = ({ onClose }) => {
     const [fournisseurs, setFournisseurs] = useState([]);
     const [filliales, setFilliales] = useState([]);
     const token = localStorage.getItem('token');
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const fetchOptions = async () => {
             try {
@@ -26,12 +26,12 @@ const TerminalForm = ({ onClose }) => {
                 let fillialeResponse;
 
                 if (userRole === 'ADMIN' || userRole === 'DSI') {
-                    fillialeResponse = await axios.get('http://localhost:8089/api/filliales/filliales');
+                    fillialeResponse = await axios.get(`${apiUrl}/api/filliales/filliales`);
                 } else if (userRole === 'RSI' || userRole === 'SI') {
-                    fillialeResponse = await axios.get(`http://localhost:8089/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
+                    fillialeResponse = await axios.get(`${apiUrl}/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
                 }
 
-                const fournisseurResponse = await axios.get('http://localhost:8089/api/fournisseurs');
+                const fournisseurResponse = await axios.get(`${apiUrl}/api/fournisseurs`);
                 setFournisseurs(fournisseurResponse.data);
                 setFilliales(fillialeResponse?.data || []);
             } catch (error) {
@@ -50,7 +50,7 @@ const TerminalForm = ({ onClose }) => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8089/api/terminals', formData, {
+            const response = await axios.post(`${apiUrl}/api/terminals`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

@@ -15,7 +15,7 @@ const defaultTheme = createTheme();
 
 export default function Forget() {
   const navigate = useNavigate();
-
+  const apiUrl = process.env.REACT_APP_API_URL;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -24,13 +24,13 @@ export default function Forget() {
 
     try {
       // Appel à l'API pour vérifier l'email
-      const response = await axios.get('http://localhost:8089/api/users/api/verify-email', {
+      const response = await axios.get(`${apiUrl}/api/users/api/verify-email`, {
         params: { email }
       });
       
       if (response.status === 200) {
         // Si l'email existe, appeler l'API de réinitialisation du mot de passe
-        const forgotPasswordResponse = await axios.post(`http://localhost:8089/api/auth/forgot-password?email=${encodeURIComponent(email)}`);
+        const forgotPasswordResponse = await axios.post(`${apiUrl}/api/auth/forgot-password?email=${encodeURIComponent(email)}`);
         alert('Un lien de réinitialisation du mot de passe a été envoyé à votre email.');
         navigate('/Email');
       }

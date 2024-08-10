@@ -25,7 +25,7 @@ const UserForm = ({ onClose }) => {
     const [filliales, setFilliales] = useState([]);
     const [selectedFilliales, setSelectedFilliales] = useState([]);
     const [selectedFillialeSI, setSelectedFillialeSI] = useState('');  // Pour le rôle SI
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");
@@ -36,12 +36,12 @@ const UserForm = ({ onClose }) => {
 
             if (userRole === 'ADMIN' || userRole === 'DSI') {
                 endpoint = role === 'SI'
-                    ? 'http://localhost:8089/api/filliales/SI'
+                    ? `${apiUrl}/api/filliales/SI`
                     : role === 'RSI'
-                        ? 'http://localhost:8089/api/filliales/RSI'
+                        ? `${apiUrl}/api/filliales/RSI`
                         : '';
             } else if (userRole === 'RSI') {
-                endpoint = `http://localhost:8089/api/filliales/by-rsi?email=${encodeURIComponent(userEmail)}`;
+                endpoint = `${apiUrl}/api/filliales/by-rsi?email=${encodeURIComponent(userEmail)}`;
             }
 
             if (endpoint) {
@@ -76,7 +76,7 @@ const UserForm = ({ onClose }) => {
         };
 
         try {
-            const response = await axios.post('http://localhost:8089/api/users/create', userDTO, {
+            const response = await axios.post(`${apiUrl}/api/users/create`, userDTO, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

@@ -16,11 +16,11 @@ const EditForfait = ({ onClose, row }) => {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success'); 
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const fetchForfait = async () => {
             try {
-                const response = await axios.get(`http://localhost:8089/api/forfaits/${row.id}`, {
+                const response = await axios.get(`${apiUrl}/api/forfaits/${row.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -46,7 +46,7 @@ const EditForfait = ({ onClose, row }) => {
         const forfait = { libelle, prix };
 
         try {
-            const response = await axios.put(`http://localhost:8089/api/forfaits/${row.id}`, forfait, {
+            const response = await axios.put(`${apiUrl}/api/forfaits/${row.id}`, forfait, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

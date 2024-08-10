@@ -4,7 +4,7 @@ import axios from 'axios';
 
 function WithLabelExample() {
   const [percentage, setPercentage] = useState(0);
-
+  const apiUrl = process.env.REACT_APP_API_URL;
   useEffect(() => {
     const fetchPercentage = async () => {
       try {
@@ -15,7 +15,7 @@ function WithLabelExample() {
           },
         };
 
-        const response = await axios.get('http://localhost:8089/api/numeros/pourcentage-affectation', config);
+        const response = await axios.get(`${apiUrl}/api/numeros/pourcentage-affectation`, config);
         // Arrondir le pourcentage à l'entier le plus proche
         setPercentage(Math.round(response.data));
       } catch (error) {

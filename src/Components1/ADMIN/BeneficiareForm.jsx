@@ -27,7 +27,7 @@ const UserForm = ({ onClose }) => {
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const [selectedFillialeLibelle, setSelectedFillialeLibelle] = useState('');
     const token = localStorage.getItem('token'); // Replace with your actual token
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         // Fetch filliales from API
         const fetchFilliales = async () => {
@@ -39,10 +39,10 @@ const UserForm = ({ onClose }) => {
                 let response;
                 
                 if (userRole === 'ADMIN' || userRole === 'DSI') {
-                    response = await axios.get('http://localhost:8089/api/filliales/filliales');
+                    response = await axios.get(`${apiUrl}/api/filliales/filliales`);
                 } else if (userRole === 'RSI' || userRole === 'SI') {
                     // Adjust this according to where you store the user email
-                    response = await axios.get(`http://localhost:8089/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
+                    response = await axios.get(`${apiUrl}/api/filliales/by-email?email=${encodeURIComponent(userEmail)}`);
                 }
         
                 setFilliales(response?.data || []);
@@ -65,7 +65,7 @@ const UserForm = ({ onClose }) => {
         };
 
         try {
-            const response = await axios.post('http://localhost:8089/api/beneficiares/ADD', userDTO, {
+            const response = await axios.post(`${apiUrl}/api/beneficiares/ADD`, userDTO, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

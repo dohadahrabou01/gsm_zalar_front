@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect,useRef, useState } from 'react';
 import axios from 'axios';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -16,16 +16,14 @@ import FormControl from '@mui/material/FormControl';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle }from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Alert from '@mui/material/Alert';
 import HistoriqueAFNumero from "./HistoriqueAFNumero";
 import Snackbar from '@mui/material/Snackbar';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 const columns = [
     { id: 'nomPrenom', label: 'Nom Complet', minWidth: 150 },
     { id: 'filliale', label: 'Filiale', minWidth: 150 },
@@ -54,8 +52,12 @@ export default function Beneficiaire() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [deleteRow, setDeleteRow] = useState(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [importExportOpen, setImportExportOpen] = useState(false);
     const [historiqueOpen, setHistoriqueOpen] = useState(false);
+    const apiUrl = process.env.REACT_APP_API_URL;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);
@@ -88,9 +90,9 @@ export default function Beneficiaire() {
         let url;
 
         if (role === 'ADMIN' || role === 'DSI') {
-          url = 'http://localhost:8089/afnumero/all';
+          url = `${apiUrl}/afnumero/all`;
         } else if (role === 'RSI' || role === 'SI') {
-          url = `http://localhost:8089/afnumero/ByEmail?email=${encodeURIComponent(email)}`;
+          url = `${apiUrl}/afnumero/ByEmail?email=${encodeURIComponent(email)}`;
         }
       
         if (!url) {
@@ -143,7 +145,9 @@ export default function Beneficiaire() {
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
-
+    const handleFileChange = (event) => {
+        setSelectedFile(event.target.files[0]);
+    };
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
@@ -163,11 +167,79 @@ export default function Beneficiaire() {
             [name]: value,
         }));
     };
+    const handleImport = async () => {
+        if (!selectedFile) {
+            alert("Aucun fichier sélectionné");
+            return;
+        }
 
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${apiUrl}/afnumero/import`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log('Fichier importé avec succès');
+                setSelectedFile(null); // Reset file selection
+                setImportExportOpen(false); // Close dialog
+                setRefresh(!refresh); // Refresh data
+            } else {
+                alert(' veuiiler verifier si le fichier  Excel est ouvert ou les donnes Deja exist');
+            }
+        } catch (error) {
+            alert('Erreur Au niveau Serveur');
+        }
+    };
     const handleDelete = (row) => {
         setDeleteRow(row);
         setConfirmDeleteOpen(true);
     };
+    
+const handleExport = async () => {
+    try {
+        // Récupérer le jeton d'authentification depuis le stockage local
+        const token = localStorage.getItem('token'); // Remplacez ceci par votre méthode de récupération de jeton
+  
+        // Effectuer la demande GET pour récupérer le fichier Excel
+        const response = await fetch(`${apiUrl}/api/export/afNumeros`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Authorization': `Bearer ${token}`, // Ajouter le jeton d'authentification
+            },
+        });
+  
+        if (response.ok) {
+            // Convertir la réponse en blob
+            const blob = await response.blob();
+            
+            // Créer un objet URL pour le blob
+            const url = window.URL.createObjectURL(blob);
+            
+            // Créer un élément de lien temporaire et déclencher le téléchargement
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Affectation_Numeros.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            
+            // Nettoyer l'objet URL
+            window.URL.revokeObjectURL(url);
+        } else {
+            console.error('Erreur lors de l\'exportation:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'exportation:', error);
+    }
+  };
 
     const confirmDelete = async () => {
         try {
@@ -176,7 +248,7 @@ export default function Beneficiaire() {
             const id = deleteRow.id; // Utilisez deleteRow pour obtenir l'ID
     
             // Construisez l'URL avec l'ID et l'email
-            const url = `http://localhost:8089/afnumero/${id}?email=${encodeURIComponent(email)}`;
+            const url = `${apiUrl}/afnumero/${id}?email=${encodeURIComponent(email)}`;
     
             await axios.delete(url, {
                 headers: {
@@ -205,7 +277,7 @@ export default function Beneficiaire() {
           const token = localStorage.getItem('token');
       
           // Obtenir les détails du bénéficiaire et la date d'affectation
-          const beneficiaryResponse = await axios.get(`http://localhost:8089/afnumero/${id}`, {
+          const beneficiaryResponse = await axios.get(`${apiUrl}/afnumero/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`, // Ajouter le token d'authentification
             }
@@ -219,7 +291,7 @@ export default function Beneficiaire() {
           const formattedDate = dateAffectation.replaceAll("/", "-"); // Formatage de la date si nécessaire
       
           // Télécharger le PDF
-          const pdfResponse = await axios.get(`http://localhost:8089/api/pdfAFNumero/download/${id}`, {
+          const pdfResponse = await axios.get(`${apiUrl}/api/pdfAFNumero/download/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`, // Ajouter le token d'authentification
             },
@@ -253,7 +325,7 @@ export default function Beneficiaire() {
             formData.append('file', file);
 
             try {
-                await axios.post(`http://localhost:8089/afnumero/upload/${id}`, formData, {
+                await axios.post(`${apiUrl}/afnumero/upload/${id}`, formData, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data',
@@ -273,7 +345,7 @@ export default function Beneficiaire() {
     const handleCheckImage = async (id) => {
         const token = localStorage.getItem('token');
         try {
-            const response = await axios.get(`http://localhost:8089/afnumero/preuve/${id}`, {
+            const response = await axios.get(`${apiUrl}/afnumero/preuve/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -352,7 +424,18 @@ export default function Beneficiaire() {
                     }}
                     sx={{ minWidth: 150 }}
                 />
-                 {role === 'ADMIN' && (  <Button variant="contained" sx={{ marginLeft: "auto",height:"50px",backgroundColor:"#B22222" }}  onClick={handleHistorique}>
+                  {role === 'ADMIN' && (
+                <>
+                    <Button
+                        variant="contained"
+                        sx={{ marginLeft: 'auto', height: '50px', backgroundColor: '#4B0082' }}
+                        onClick={handleExport}
+                    >
+                        <ImportExportIcon />
+                    </Button>
+                </>
+            )}
+                 {role === 'ADMIN' && (  <Button variant="contained" sx={{height:"50px",backgroundColor:"#B22222" }}  onClick={handleHistorique}>
                     H
                 </Button>  )}
             </Box>
@@ -443,6 +526,30 @@ export default function Beneficiaire() {
                 <DialogContent>
                     <HistoriqueAFNumero />
                 </DialogContent>
+            </Dialog>
+            <Dialog open={importExportOpen} onClose={() => setImportExportOpen(false)}>
+                <DialogTitle sx={{color : "green"}}>Choisir une action</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Veuillez sélectionner si vous souhaitez exporter ou importer des données.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleExport} sx={{color : "#4B0082"}}>Exporter</Button>
+                    <input
+                        accept=".xlsx, .xls"
+                        type="file"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                    />
+                    <Button onClick={() => fileInputRef.current.click()} sx={{color : "#4B0082"}}>
+                        choisir Un fichier excel
+                    </Button>
+                    <Button onClick={handleImport} sx={{color : "#4B0082"}}>
+            Importer
+        </Button>
+                </DialogActions>
             </Dialog>
             {/* Snackbar for success/error messages */}
             <Snackbar open={snackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
