@@ -11,7 +11,7 @@ const Admin = () => {
   const token = localStorage.getItem('token'); // Adjust token retrieval as needed
   const expired = localStorage.getItem('expirationTime');
   const currentTime = new Date().getTime();
-  const apiUrl = `http://${window.location.hostname}:9000`;
+  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
   useEffect(() => {
     if (token) {
       axios.get(`${apiUrl}/api/notifications/ongoing`, {

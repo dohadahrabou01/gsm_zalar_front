@@ -4,7 +4,7 @@ import axios from 'axios';
 
 function WithLabelExample() {
   const [percentage, setPercentage] = useState(0);
-  const apiUrl = `http://${window.location.hostname}:9000`;
+  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
   useEffect(() => {
     const fetchPercentage = async () => {
       try {

@@ -32,7 +32,7 @@ const StatusCard = ({ title, count, color }) => (
 const AffectedStatuses = () => {
   const [statusCounts, setStatusCounts] = React.useState({});
   const [loading, setLoading] = React.useState(false);
-  const apiUrl = `http://${window.location.hostname}:9000`;
+  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
   React.useEffect(() => {
     const fetchData = async () => {
       setLoading(true);

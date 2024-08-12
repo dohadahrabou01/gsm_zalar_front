@@ -27,7 +27,7 @@ const EditUserForm = ({ userId, onClose }) => {
     const [gerantFilliale, setGerantFilliale] = useState('');
     const [userData, setUserData] = useState(null);
     const token = localStorage.getItem('token');
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
    
     const userRole = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");

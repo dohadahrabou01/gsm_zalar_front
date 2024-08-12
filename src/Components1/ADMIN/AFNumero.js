@@ -57,7 +57,7 @@ export default function Beneficiaire() {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [importExportOpen, setImportExportOpen] = useState(false);
     const [historiqueOpen, setHistoriqueOpen] = useState(false);
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);

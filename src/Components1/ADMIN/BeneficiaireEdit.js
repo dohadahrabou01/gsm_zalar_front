@@ -27,7 +27,7 @@ const EditBeneficiaire = ({ row, onClose, multiple }) => {
     const [selectedFillialeLibelle, setSelectedFillialeLibelle] = useState(row.filliale || '');
     const [isMultiple, setIsMultiple] = useState(row.multiple === true || row.multiple === "true"); // Handle both boolean and string "true"
     const token = localStorage.getItem('token'); // Replace with your actual token retrieval mechanism
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
     useEffect(() => {
         console.log('Beneficiaire information:', row);
         setIsMultiple(row.multiple === true || row.multiple === "true"); // Handle both boolean and string "true"

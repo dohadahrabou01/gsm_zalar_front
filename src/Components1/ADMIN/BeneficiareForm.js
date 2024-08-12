@@ -27,7 +27,7 @@ const UserForm = ({ onClose }) => {
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const [selectedFillialeLibelle, setSelectedFillialeLibelle] = useState('');
     const token = localStorage.getItem('token'); // Replace with your actual token
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
     useEffect(() => {
         // Fetch filliales from API
         const fetchFilliales = async () => {

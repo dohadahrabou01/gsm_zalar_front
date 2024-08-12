@@ -11,7 +11,7 @@ const UserProfile = () => {
   const role = localStorage.getItem('role');
   const [hovered, setHovered] = useState(false);
   const [openEmailConfig, setOpenEmailConfig] = useState(false); // State for email config modal
-  const apiUrl = `http://${window.location.hostname}:9000`;
+  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
   const [editUser, setEditUser] = useState({
     prenom: '',
     nom: '',

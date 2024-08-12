@@ -15,7 +15,7 @@ const defaultTheme = createTheme();
 
 export default function Forget() {
   const navigate = useNavigate();
-  const apiUrl = `http://${window.location.hostname}:9000`;
+  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
 
   const handleSubmit = async (event) => {
     event.preventDefault();

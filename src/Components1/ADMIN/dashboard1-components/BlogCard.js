@@ -38,7 +38,9 @@ const FilialeCard = ({ filiale, onEdit, onDelete }) => {
     }
 
     const fetchData = async () => {
-      const apiUrl = `http://${window.location.hostname}:9000`;
+      const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+
+
       const count = await fetchBeneficiaires(filiale.libelle, token,apiUrl);
       console.log(`Nombre de bénéficiaires pour ${filiale.libelle}:`, count); // Log the count value
       setBeneficiairesCount(count);
@@ -97,7 +99,7 @@ export default function MediaCard() {
   const [refresh, setRefresh] = useState(false);
   const fetchData = async (token) => {
     try {
-      const apiUrl = `http://${window.location.hostname}:9000`;
+      const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
       const response = await axios.get(`${apiUrl}/api/filliales/filliales`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -188,7 +190,7 @@ const handleHistorique = () => {
       formData.append('image', newImage);
     }
   
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
   
     try {
       if (editMode && selectedFiliale) {

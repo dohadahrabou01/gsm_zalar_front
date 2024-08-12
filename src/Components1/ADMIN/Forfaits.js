@@ -43,7 +43,7 @@ export default function ForfaitTable() {
     const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error', 'warning', 'info'
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
     useEffect(() => {
         fetchForfaits();
     }, [refresh]);

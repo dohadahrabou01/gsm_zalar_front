@@ -62,7 +62,7 @@ export default function Beneficiaire() {
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const role=localStorage.getItem("role");
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);

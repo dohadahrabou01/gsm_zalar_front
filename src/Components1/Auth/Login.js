@@ -16,7 +16,7 @@ import './Login.css';
 import { useEffect, useState } from 'react';
 
 const defaultTheme = createTheme();
-const apiUrl = `http://${window.location.hostname}:9000`;
+const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
 axios.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');

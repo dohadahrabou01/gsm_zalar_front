@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 const ValidateUpdate = () => {
   const { id } = useParams();
   const [message, setMessage] = useState('');
-  const apiUrl = `http://${window.location.hostname}:9000`;
+  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
   useEffect(() => {
     const validateUpdate = async () => {
       try {

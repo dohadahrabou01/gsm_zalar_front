@@ -17,7 +17,7 @@ export default function Numero() {
     const [numeros, setNumeros] = useState([]);
     const [terminals, setTerminals] = useState([]);
     const [code, setCode] = useState(localStorage.getItem("code"));
-    const apiUrl = `http://${window.location.hostname}:9000`;
+    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };

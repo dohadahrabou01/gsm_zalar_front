@@ -44,7 +44,7 @@ export default function FournisseurTable() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [selectedRowToDelete, setSelectedRowToDelete] = useState(null);
    const userEmail=localStorage.getItem("email");
-   const apiUrl = `http://${window.location.hostname}:9000`;
+   const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
 
     useEffect(() => {
         fetchFournisseurs();
