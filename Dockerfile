@@ -1,22 +1,17 @@
-# Pull the official base image
+
 FROM node:18-alpine
 
-# Set working directory
+
 WORKDIR /gsm_zalar_front
+COPY package.json package-lock.json ./
 
-# Add `/gsm_zalar_front/node_modules/.bin` to $PATH
-ENV PATH /gsm_zalar_front/node_modules/.bin:$PATH
 
-# Install application dependencies
-COPY package.json ./
-COPY package-lock.json ./
 RUN npm install --legacy-peer-deps
+COPY . .
 
-# Add app
-COPY . ./
+Run npm run build
 
-# Expose the port (if needed)
+
 EXPOSE 3000
 
-# Start app
 CMD ["npm", "start"]
