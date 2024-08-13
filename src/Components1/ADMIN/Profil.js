@@ -42,7 +42,9 @@ const UserProfile = () => {
           nom: response.data.nom,
           email: response.data.email,
           role: response.data.role,
-          password: '', // Initialisez avec une chaîne vide
+          password: '', 
+          filliales: response.data.filliales, // Ajoutez les filliales existantes
+          gerantFilliale: response.data.gerantFilliale,// Initialisez avec une chaîne vide
         });
       } catch (err) {
         setError(err.message);
