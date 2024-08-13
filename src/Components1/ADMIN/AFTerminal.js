@@ -124,7 +124,7 @@ useEffect(() => {
     
         imprim: item.imprim ? 'Oui' : 'Non',
       }));
-console.log(data);
+
       setRows(data);
       setLoading(false);
     } catch (error) {
