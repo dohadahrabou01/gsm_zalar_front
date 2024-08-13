@@ -1,17 +1,6 @@
-
-FROM node:18-alpine
-
-
-WORKDIR /gsm_zalar_front
-COPY package.json package-lock.json ./
-
-
-RUN npm install --legacy-peer-deps
-COPY . .
-
-Run npm run build
-
-
-EXPOSE 3000
-
-CMD ["npm", "start"]
+FROM mysql:8
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=gsm_zalar
+ENV MYSQL_USER=root
+ENV MYSQL_PASSWORD=root
+EXPOSE 3306
