@@ -16,7 +16,7 @@ const EditForfait = ({ onClose, row }) => {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success'); 
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         const fetchForfait = async () => {
             try {

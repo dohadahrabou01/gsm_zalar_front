@@ -23,7 +23,7 @@ export default function Reset() {
   
   }, []); 
   const token = new URLSearchParams(window.location.search).get('token');
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);

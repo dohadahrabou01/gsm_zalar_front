@@ -13,7 +13,7 @@ const ForfaitForm = ({ onClose }) => {
     const [prix, setPrix] = useState('');
     const [forfaits, setForfaits] = useState([{ libelle: '', prix: '' }]);
     const token = localStorage.getItem("token"); // Remplacez par votre token réel
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     const handleSubmit = async (e) => {
         e.preventDefault();
         const forfait = forfaits[0]; // Assuming you want to send only the first forfait

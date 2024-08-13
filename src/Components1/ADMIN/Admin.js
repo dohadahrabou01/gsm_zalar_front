@@ -12,7 +12,7 @@ const Admin = () => {
   const token = localStorage.getItem('token'); // Adjust token retrieval as needed
   const expired = localStorage.getItem('expirationTime');
   const currentTime = new Date().getTime();
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
   useEffect(() => {
     if (token) {
       axios.get(`${apiUrl}/api/notifications/ongoing`, {

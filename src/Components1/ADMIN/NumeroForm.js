@@ -27,7 +27,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
     const [forfaits, setForfaits] = useState([]);
     const [loadingFilliales, setLoadingFilliales] = useState(true);
     const [loadingForfaits, setLoadingForfaits] = useState(true);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
       const fetchFilliales = async () => {
         const userRole = localStorage.getItem('role');

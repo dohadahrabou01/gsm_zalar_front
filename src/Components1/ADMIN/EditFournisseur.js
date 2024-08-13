@@ -12,7 +12,7 @@ const EditFournisseur = ({ onClose, row }) => {
     const [tel, setTel] = useState(row.tel || '');
     const [email, setEmail] = useState(row.email || '');
     const token = localStorage.getItem("token"); // Replace with your actual token
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         if (row) {
             setLibelle(row.libelle);

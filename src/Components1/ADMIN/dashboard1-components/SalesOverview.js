@@ -8,7 +8,7 @@ const SalesOverview = () => {
   const [simsData, setSimsData] = useState([]);
   const [filiales, setFiliales] = useState([]);
   const [seriesData, setSeriesData] = useState([]);
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
   const token = localStorage.getItem('token'); // Supposons que le token est stocké dans localStorage
 
   useEffect(() => {

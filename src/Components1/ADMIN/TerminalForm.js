@@ -17,7 +17,7 @@ const TerminalForm = ({ onClose }) => {
     const [fournisseurs, setFournisseurs] = useState([]);
     const [filliales, setFilliales] = useState([]);
     const token = localStorage.getItem('token');
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         const fetchOptions = async () => {
             try {

@@ -25,7 +25,7 @@ const UserForm = ({ onClose }) => {
     const [filliales, setFilliales] = useState([]);
     const [selectedFilliales, setSelectedFilliales] = useState([]);
     const [selectedFillialeSI, setSelectedFillialeSI] = useState('');  // Pour le rôle SI
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");

@@ -15,7 +15,7 @@ const defaultTheme = createTheme();
 
 export default function Forget() {
   const navigate = useNavigate();
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
 
   const handleSubmit = async (event) => {
     event.preventDefault();

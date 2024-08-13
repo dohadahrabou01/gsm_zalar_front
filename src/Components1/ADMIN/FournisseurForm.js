@@ -8,7 +8,7 @@ const FournisseurForm = ({ onClose }) => {
     const [libelle, setLibelle] = useState('');
     const [tel, setTel] = useState('');
     const [email, setEmail] = useState('');
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {

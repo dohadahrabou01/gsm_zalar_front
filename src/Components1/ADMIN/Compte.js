@@ -44,7 +44,7 @@ export default function Compte() {
     const [page, setPage] = useState(0);
     const role = localStorage.getItem('role');
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     const [filters, setFilters] = useState({
         nomPrenom: '',
         role: '',

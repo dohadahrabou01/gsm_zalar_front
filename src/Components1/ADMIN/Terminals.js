@@ -76,7 +76,7 @@ export default function Terminal() {
     const [imeiFilter, setImeiFilter] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchData(token);

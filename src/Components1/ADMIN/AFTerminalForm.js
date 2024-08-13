@@ -8,7 +8,7 @@ const AFTerminalForm = ({ open, onClose, imei, onAssign }) => {
     const [selectedBeneficiare, setSelectedBeneficiare] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         const fetchBeneficiares = async () => {
             if (!imei) return; // Ensure imei is not empty

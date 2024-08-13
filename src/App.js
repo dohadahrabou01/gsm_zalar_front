@@ -65,7 +65,7 @@ function App() {
 
   const handleLogin = (tokenData) => {
     const currentTime = new Date().getTime();
-    const expirationTime = currentTime +60 * 60 * 1000; // 2 minutes in milliseconds
+    const expirationTime = currentTime + 60 * 60 * 1000; // 2 minutes in milliseconds
 
     localStorage.setItem('token', tokenData.token);
     localStorage.setItem('role', tokenData.role);

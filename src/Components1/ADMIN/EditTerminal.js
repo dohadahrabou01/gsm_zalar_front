@@ -19,7 +19,7 @@ const EditTerminal = ({ terminal, onClose }) => {
     const [filliales, setFilliales] = useState([]);
     const [loadingFournisseurs, setLoadingFournisseurs] = useState(true);
     const [loadingFilliales, setLoadingFilliales] = useState(true);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         if (terminal) {
             setFormData(terminal);

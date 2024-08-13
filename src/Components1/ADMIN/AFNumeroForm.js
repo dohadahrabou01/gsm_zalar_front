@@ -21,7 +21,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [refresh, setRefresh] = useState(false);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         const fetchBeneficiares = async () => {
             if (!numero) {
@@ -55,7 +55,7 @@ const NumeroForm = ({ row = {}, onClose }) => {
         try {
             await createNumero(numero, selectedBeneficiare, affectantEmail, token);
         } catch (error) {
-            window.alert('le  beneficiare a deja une carte SIM');
+            window.alert('Verifier si le  beneficiare a deja une carte SIM ou bien le numero na pas de forfait');
             onClose();
             setError(null);
             console.error('Erreur lors de la soumission du formulaire:', error);

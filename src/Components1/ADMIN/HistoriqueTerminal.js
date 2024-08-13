@@ -33,7 +33,7 @@ export default function Compte() {
     const [open, setOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
     const [refresh, setRefresh] = useState(false);
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
     useEffect(() => {
         const token = localStorage.getItem('token');
         fetchHistorique(token);

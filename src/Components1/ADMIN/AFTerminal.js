@@ -58,7 +58,7 @@ const AFTerminalDisplay = () => {
   const [rowToReject, setRowToReject] = useState(null);
   const [importExportOpen, setImportExportOpen] = useState(false);
   const currentUserRole = localStorage.getItem('role');
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
   useEffect(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');

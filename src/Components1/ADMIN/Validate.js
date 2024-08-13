@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 const ValidateUpdate = () => {
   const { id } = useParams();
   const [message, setMessage] = useState('');
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
   useEffect(() => {
     const validateUpdate = async () => {
       try {

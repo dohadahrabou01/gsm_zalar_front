@@ -27,7 +27,7 @@ const EditUserForm = ({ userId, onClose }) => {
     const [gerantFilliale, setGerantFilliale] = useState('');
     const [userData, setUserData] = useState(null);
     const token = localStorage.getItem('token');
-    const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+    const apiUrl = `https://gsm-zalar-back1.onrender.com`;
    
     const userRole = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");

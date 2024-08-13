@@ -4,7 +4,7 @@ import axios from 'axios';
 
 function WithLabelExample() {
   const [percentage, setPercentage] = useState(0);
-  const apiUrl = `${window.location.protocol}//${window.location.hostname}:9000`;
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
   useEffect(() => {
     const fetchPercentage = async () => {
       try {
