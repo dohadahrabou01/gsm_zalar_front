@@ -23,10 +23,35 @@ const fetchBeneficiaires = async (libelle, token,apiUrl) => {
     return 0; // Default to 0 if there's an error
   }
 };
+const fetchImage = async (id) => {
+  const apiUrl = `https://gsm-zalar-back1.onrender.com`;
+  const token = localStorage.getItem('token');
+  const imageUrl = `${apiUrl}/api/filliales/images/${id}`;
+  console.log(imageUrl);
+  
+  try {
+    const response = await axios.get(imageUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: 'arraybuffer', // Pour récupérer les données binaires
+    });
+    
+    const blob = new Blob([response.data], { type: 'image/jpeg' });
+    const imageObjectUrl = URL.createObjectURL(blob);
+
+    return imageObjectUrl;
+ 
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'image:', error.message);
+    return defaultImage; // Fallback image
+  }
+};
 
 const apiUrl = `https://gsm-zalar-back1.onrender.com`;
 const FilialeCard = ({ filiale, onEdit, onDelete }) => {
   const [beneficiairesCount, setBeneficiairesCount] = useState(0);
+  const [imageSrc, setImageSrc] = useState(defaultImage);
  // Pour afficher/masquer l'historique
 
   useEffect(() => {
@@ -45,25 +70,23 @@ const FilialeCard = ({ filiale, onEdit, onDelete }) => {
       console.log(`Nombre de bénéficiaires pour ${filiale.libelle}:`, count); // Log the count value
       setBeneficiairesCount(count);
     };
-
+    const loadImage = async () => {
+      const imgSrc = await fetchImage(filiale.id);
+      setImageSrc(imgSrc);
+    };
     fetchData();
-  }, [filiale.libelle]);
+    loadImage();
+  }, [filiale.libelle, filiale.id]);
 
-  const getImageForFiliale = () => {
-    try {
-      if (filiale.img) {
-        return require(`../../../assets/${filiale.img}`);
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'importation de l\'image:', error.message);
-    }
-    return defaultImage; // Image par défaut si aucune image n'est fournie ou erreur
-  };
+  
  
   return (
     <Card style={{ height: "335px" }}>
-      <img src={getImageForFiliale()} alt={filiale.libelle} style={{ width: '100%', height: 200, objectFit: 'cover' }} />
-      <CardContent>
+     <img
+        src={imageSrc}
+        alt={filiale.libelle}
+        style={{ width: '100%', height: 200, objectFit: 'cover' }}
+      /> <CardContent>
       <Typography gutterBottom variant="h5" component="div">
   <Box display="flex" justifyContent="space-between" width="100%">
     <span>{filiale.libelle}</span>
